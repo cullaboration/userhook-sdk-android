@@ -1,0 +1,80 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Button">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:background">@drawable/button_back</item>
+    </style>
+
+    <style name="Text">
+        <item name="android:gravity">center</item>
+    </style>
+
+
+
+
+
+    <!-- User Hook -->
+    <style name="UserHook" parent="Theme.AppCompat.NoActionBar">
+        <item name="actionBarStyle">@style/UHActionBar</item>
+    </style>
+
+    <style name="UHActionBar" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="background">@color/colorPrimary</item>
+        <item name="android:titleTextStyle">@style/UHActionBarText</item>
+        <item name="titleTextStyle">@style/UHActionBarText</item>
+    </style>
+
+
+    <style name="UHActionBarText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="UHPromptOverlay">
+        <item name="android:background">#99000000</item>
+    </style>
+
+    <style name="UHPromptContent">
+        <item name="android:background">@android:color/white</item>
+    </style>
+
+    <style name="UHPromptText">
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">16dp</item>
+    </style>
+
+    <style name="UHPositiveButton">
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+
+    <style name="UHNegativeButton">
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+
+
+</resources>

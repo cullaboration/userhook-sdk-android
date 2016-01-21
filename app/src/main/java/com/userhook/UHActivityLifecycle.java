@@ -1,0 +1,155 @@
+/**
+ * Copyright (c) 2015 - present, Cullaboration Media, LLC.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+package com.userhook;
+
+import android.app.Activity;
+import android.app.Application;
+import android.os.Bundle;
+import android.util.Log;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class UHActivityLifecycle implements Application.ActivityLifecycleCallbacks {
+
+    private int activeActivities = 0;
+    private long sessionStartTime, backgroundTime;
+
+    private static final int UH_TIME_BETWEEN_SESSIONS_IN_SECONDS = 600; // 5 minutes
+
+    private boolean fetchHookpointsOnSessionStart = false;
+
+    private Activity currentActivity;
+
+    public UHActivityLifecycle() {
+
+    }
+
+    public UHActivityLifecycle(boolean fetchHookpointsOnSessionStart) {
+        this.fetchHookpointsOnSessionStart = fetchHookpointsOnSessionStart;
+    }
+
+
+    public void onActivityCreated(Activity activity, Bundle bundle) {
+
+    }
+
+    public void onActivityDestroyed(Activity activity) {
+
+    }
+
+    public void onActivityPaused(Activity activity) {
+
+
+
+    }
+
+    public void onActivityResumed(Activity activity) {
+
+        // track the activity that is in the foreground
+        currentActivity = activity;
+
+    }
+
+    public void onActivitySaveInstanceState(Activity activity,
+                                            Bundle outState) {
+
+    }
+
+    public void onActivityStarted(Activity activity) {
+
+        // mark that an activity has started
+        activeActivities++;
+        if (activeActivities < 0) {
+            activeActivities = 0;
+        }
+
+        // if only one activity is started, then this means the app is just came to the foreground
+        if (activeActivities == 1) {
+            // session started
+
+            sessionStartTime = System.currentTimeMillis();
+            Log.i("userhook","session started");
+
+            if ((System.currentTimeMillis() - backgroundTime) / 1000 > UH_TIME_BETWEEN_SESSIONS_IN_SECONDS) {
+                // mark this as a new session
+                createSession(activity);
+            }
+
+        }
+    }
+
+    public void onActivityStopped(Activity activity) {
+
+        activeActivities--;
+
+        if (activeActivities < 0) {
+            activeActivities = 0;
+        }
+
+        // if no activities are active, then the app must be in the background
+        if (activeActivities == 0) {
+            // session stopped
+
+            long sessionLength = (System.currentTimeMillis() - sessionStartTime) / 1000;
+
+            Log.i("userhook","session stopped: " + sessionLength);
+            if (sessionLength > 0) {
+                // send session data to server
+                Map<String, Object> data = new HashMap<String,Object>();
+                data.put("session_time", sessionLength+"");
+
+                UHOperation operation = new UHOperation();
+                operation.updateSessionData(data, null);
+
+            }
+
+
+
+            backgroundTime = System.currentTimeMillis();
+
+        }
+
+
+    }
+
+    public Activity getCurrentActivity() {
+        return currentActivity;
+    }
+
+    public void createSession(final Activity activity) {
+        UHOperation operation = new UHOperation();
+
+        if (fetchHookpointsOnSessionStart) {
+            // fetch hookpoints once the session has been created
+            operation.createSession(new UserHook.UHSuccessListener() {
+                @Override
+                public void onSuccess() {
+                    UserHook.fetchHookPoint(new UserHook.UHHookPointFetchListener() {
+                        @Override
+                        public void onSuccess(UHHookPoint hookPoint) {
+                            if (hookPoint != null) {
+                                hookPoint.execute(activity);
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+                            Log.e("uh","error fetching hookpoints");
+                        }
+                    });
+                }
+            });
+        }
+        else {
+            operation.createSession(null);
+        }
+    }
+
+}

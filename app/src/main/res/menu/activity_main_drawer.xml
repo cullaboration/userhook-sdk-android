@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="APP EXAMPLES">
+        <menu>
+            <group
+                android:id="@+id/group_app"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_feedback"
+                    android:title="Feedback" />
+                <item
+                    android:id="@+id/nav_rate"
+                    android:title="Rate This App" />
+
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="DEMO APP ADMIN FUNCTIONS">
+        <menu>
+            <group
+                android:id="@+id/group_demo_app"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_clear_session"
+                    android:title="Clear User Session" />
+                <item
+                    android:id="@+id/nav_clear_user"
+                    android:title="Clear User Hook User" />
+            </group>
+        </menu>
+    </item>
+
+
+</menu>
