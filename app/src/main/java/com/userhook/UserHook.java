@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 - present, Cullaboration Media, LLC.
  * All rights reserved.
- *
+ * <p/>
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -10,7 +10,22 @@ package com.userhook;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+
+import com.userhook.push.UHRegistrationIntentService;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +38,7 @@ public class UserHook {
 
     static boolean hasNewFeedback = false;
     protected static UHFeedbackListener feedbackListener;
+    protected static UHPushMessageListener pushMessageListener;
 
     static UHActivityLifecycle activityLifecycle;
 
@@ -31,9 +47,12 @@ public class UserHook {
     public static final String UH_URL_SCHEMA = "uh://";
     public static final String UH_PROTOCOL = "userhook";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "0.9";
+    public static final String UH_SDK_VERSION = "1.0";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
+
+    public static final String UH_PUSH_DATA = "uh_push_data";
+    public static final String UH_PUSH_TRACKED = "uh_push_tracked";
 
 
     private static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
@@ -54,6 +73,10 @@ public class UserHook {
         activityLifecycle = new UHActivityLifecycle(fetchHookpointsOnSessionStart);
         application.registerActivityLifecycleCallbacks(activityLifecycle);
 
+        // register for push
+        Intent registerIntent = new Intent(application, UHRegistrationIntentService.class);
+        application.startService(registerIntent);
+
     }
 
 
@@ -67,17 +90,17 @@ public class UserHook {
         }
     }
 
-    public static void updateSessionData(Map<String,Object> data, UHSuccessListener listener) {
+    public static void updateSessionData(Map<String, Object> data, UHSuccessListener listener) {
         UHOperation operation = new UHOperation();
         operation.updateSessionData(data, listener);
     }
 
-    public static void updateCustomFields(Map<String,Object> data, UHSuccessListener listener) {
+    public static void updateCustomFields(Map<String, Object> data, UHSuccessListener listener) {
 
         UHOperation operation = new UHOperation();
-        Map<String,Object> customFieldData = new HashMap<>();
+        Map<String, Object> customFieldData = new HashMap<>();
         for (String key : data.keySet()) {
-            customFieldData.put("custom_fields."+key, data.get(key));
+            customFieldData.put("custom_fields." + key, data.get(key));
         }
         operation.updateSessionData(customFieldData, listener);
     }
@@ -85,7 +108,7 @@ public class UserHook {
     public static void updatePurchasedItem(String sku, Number price, UHSuccessListener listener) {
 
         UHOperation operation = new UHOperation();
-        Map<String,Object> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
         data.put("purchases", sku);
         data.put("purchases_amount", price);
         operation.updateSessionData(data, listener);
@@ -141,19 +164,95 @@ public class UserHook {
 
     public static void markAsRated() {
         // mark that the user has "rated" this app
-        Map<String,Object> params = new HashMap<String, Object>();
-        params.put("rated",true);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("rated", true);
         UserHook.updateSessionData(params, null);
     }
 
+    public static void registerPushToken(String token) {
+        UHOperation operation = new UHOperation();
+        operation.registerPushToken(token);
+    }
+
+    public static void trackPushOpen(Bundle data) {
+        UHOperation operation = new UHOperation();
+        operation.trackPushOpen(data);
+    }
+
+    public static void setPushMessageListener(UHPushMessageListener listener) {
+        pushMessageListener = listener;
+    }
+
+    public static Notification handlePushMessage(Bundle data) {
+
+        String message = data.getString("message");
+        String title = "";
+
+        if (data.containsKey("title") && data.getString("title") != null) {
+            title = data.getString("title");
+        } else {
+            title = applicationContext.getApplicationInfo().loadLabel(applicationContext.getPackageManager()).toString();
+        }
+
+
+        Map<String, Object> payload = new HashMap<>();
+        if (data.containsKey("payload")) {
+            try {
+                JSONObject json = new JSONObject(data.getString("payload"));
+                payload = UHJsonUtils.toMap(json);
+            }
+            catch (JSONException e) {
+                Log.e("uh","error parsing push notification payload");
+            }
+        }
+
+
+
+        // message received
+        Intent intent;
+
+        if (pushMessageListener != null) {
+            intent = pushMessageListener.onPushMessage(payload);
+        } else {
+            // default to opening the main activity
+            intent = applicationContext.getPackageManager().getLaunchIntentForPackage(applicationContext.getPackageName());
+        }
+
+        intent.putExtra(UserHook.UH_PUSH_DATA, data);
+        intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+
+        try {
+            ApplicationInfo appInfo = applicationContext.getPackageManager().getApplicationInfo(applicationContext.getPackageName(), PackageManager.GET_META_DATA);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(applicationContext)
+                    .setSmallIcon(appInfo.icon)
+                    .setContentText(message)
+                    .setContentTitle(title)
+                    .setAutoCancel(true)
+                    .setContentIntent(pendingIntent);
+
+            // use default sound
+            notificationBuilder.setDefaults(Notification.DEFAULT_SOUND);
+
+            return notificationBuilder.build();
+
+        } catch (Exception e) {
+            Log.e("uh", "error create push notification", e);
+            return null;
+        }
+
+    }
+
+
     public static int getResourceId(String name, String type) {
-        int id = applicationContext.getResources().getIdentifier(name, type, applicationContext.getPackageName());
-        return id;
+        return applicationContext.getResources().getIdentifier(name, type, applicationContext.getPackageName());
     }
 
     public interface UHHookPointActionListener {
 
-        void onAction (Activity activity, Map<String,Object> payload);
+        void onAction(Activity activity, Map<String, Object> payload);
     }
 
 
@@ -171,6 +270,10 @@ public class UserHook {
 
     public interface UHFeedbackListener {
         void onNewFeedback(Activity activity);
+    }
+
+    public interface UHPushMessageListener {
+        Intent onPushMessage(Map<String, Object> payload);
     }
 
 }

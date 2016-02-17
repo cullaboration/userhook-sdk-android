@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
 
+    <!-- User Hook Push Permissions -->
+    <permission android:name="com.cullaboration.userhookdemo.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.cullaboration.userhookdemo.permission.C2D_MESSAGE" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -31,10 +36,40 @@
             />
 
 
-        <!-- UserHook -->
+        <!-- User Hook -->
         <activity android:name="com.userhook.UHHostedPageActivity"
             android:theme="@style/UserHook"
             />
+
+        <!-- User Hook Push Setup -->
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="com.cullaboration.userhookdemo" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name="com.userhook.push.UHGcmListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="com.userhook.push.UHInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name="com.userhook.push.UHRegistrationIntentService"
+            android:exported="false">
+        </service>
 
     </application>
 

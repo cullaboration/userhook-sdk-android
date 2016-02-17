@@ -10,6 +10,7 @@ package com.userhook;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -54,6 +55,15 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
         // track the activity that is in the foreground
         currentActivity = activity;
+
+        // track push message opens
+        Intent intent = activity.getIntent();
+        if (intent != null  && intent.hasExtra(UserHook.UH_PUSH_DATA) && intent.hasExtra(UserHook.UH_PUSH_TRACKED)
+                && !intent.getBooleanExtra(UserHook.UH_PUSH_TRACKED, false)) {
+
+            UserHook.trackPushOpen(intent.getBundleExtra(UserHook.UH_PUSH_DATA));
+            intent.putExtra(UserHook.UH_PUSH_TRACKED, true);
+        }
 
     }
 

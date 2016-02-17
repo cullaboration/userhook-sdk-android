@@ -85,7 +85,10 @@ public class UHHookPointRatingPrompt extends UHHookPoint {
             @Override
             public void run() {
 
-                ViewGroup rootView = (ViewGroup) activity.findViewById(android.R.id.content);
+                // check for current activity so we have the top most activity in case another activity
+                // has started since the hookpoints were loaded
+                Activity currentActivity = UserHook.activityLifecycle.getCurrentActivity();
+                ViewGroup rootView = (ViewGroup) currentActivity.findViewById(android.R.id.content);
                 rootView.addView(promptView);
                 promptView.showDialog();
 

@@ -8,6 +8,8 @@
 
 package com.userhook;
 
+import android.os.Bundle;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +32,19 @@ public class UHJsonUtils {
             map.put(key, fromJson(object.get(key)));
         }
         return map;
+    }
+
+    public static JSONObject toJSON(Bundle object) {
+
+        JSONObject jsonObject = new JSONObject();
+
+        for (String key : object.keySet()) {
+            try {
+                jsonObject.put(key, object.get(key));
+            }
+            catch (JSONException je) {}
+        }
+        return jsonObject;
     }
 
     private static Object fromJson(Object json) throws JSONException {

@@ -11,6 +11,10 @@ import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.util.Log;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+
 
 public class UHDeviceInfo {
 
@@ -38,6 +42,16 @@ public class UHDeviceInfo {
 
             return null;
         }
+    }
+
+    public static long getTimezoneOffset() {
+
+        Calendar cal = Calendar.getInstance();
+        TimeZone timezone = cal.getTimeZone();
+        int offset = timezone.getRawOffset();
+
+        return TimeUnit.SECONDS.convert(offset, TimeUnit.MILLISECONDS);
+
     }
 
 

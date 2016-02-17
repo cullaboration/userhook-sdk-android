@@ -12,3 +12,4 @@ build
 classes
 gen-external-apklibs
 userhook.xml
+google-services.json

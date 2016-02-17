@@ -100,5 +100,32 @@ public class MainApplication extends Application {
             }
         });
 
+        UserHook.setPushMessageListener(new UserHook.UHPushMessageListener() {
+            @Override
+            public Intent onPushMessage(Map<String, Object> payload) {
+                /*
+                The UHPushMessageListener allows you to create a custom intent when a push
+                message is opened. This could be used to deep link into your app. The payload
+                contains the key/values that were defined in the User Hook admin page when
+                a push notification was created.
+
+                If no UHPushMessageListener is set, the app's main activity will be launched
+                when a push message is opened.
+                 */
+
+                String action = "";
+                if (payload.containsKey("action")) {
+                    action = (String)payload.get("action");
+                }
+
+                Log.i("uh", "push payload action field: " + action);
+
+                Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                intent.putExtra("action", action);
+
+                return intent;
+            }
+        });
+
     }
 }
