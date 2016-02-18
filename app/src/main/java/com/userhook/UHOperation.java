@@ -8,6 +8,7 @@
 package com.userhook;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -270,12 +271,33 @@ public class UHOperation {
     }
 
 
-    public void registerPushToken(String deviceToken) {
+    public void registerPushToken(final String deviceToken, int retryCount) {
 
         Map<String, Object> params = new HashMap<>();
         if (UHUser.getUserId() != null) {
             params.put("user", UHUser.getUserId());
         }
+        else {
+
+            // we need a userId to register for push messages
+            if (retryCount < 2) {
+
+                final int newRetryCount = retryCount++;
+
+                // wait 5 seconds and then try to register
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        registerPushToken(deviceToken, newRetryCount);
+                    }
+                }, 5000);
+
+            }
+
+            return;
+        }
+
         params.put("os", "android");
         params.put("sdk", UserHook.UH_SDK_VERSION);
         params.put("token", deviceToken);

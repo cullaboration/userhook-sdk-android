@@ -171,7 +171,7 @@ public class UserHook {
 
     public static void registerPushToken(String token) {
         UHOperation operation = new UHOperation();
-        operation.registerPushToken(token);
+        operation.registerPushToken(token, 1);
     }
 
     public static void trackPushOpen(Bundle data) {
