@@ -44,6 +44,7 @@ public class UserHook {
 
     public static final String UH_API_URL = "https://api.userhook.com";
     public static final String UH_HOST_URL = "https://formhost.userhook.com";
+
     public static final String UH_URL_SCHEMA = "uh://";
     public static final String UH_PROTOCOL = "userhook";
     public static final int UH_API_VERSION = 1;
@@ -200,6 +201,15 @@ public class UserHook {
             try {
                 JSONObject json = new JSONObject(data.getString("payload"));
                 payload = UHJsonUtils.toMap(json);
+
+                // check if this is a feedback reply
+                if (json.has("new_feedback") && json.getBoolean("new_feedback")) {
+                    UserHook.setHasNewFeedback(true);
+                } else {
+                    UserHook.setHasNewFeedback(false);
+                }
+
+
             }
             catch (JSONException e) {
                 Log.e("uh","error parsing push notification payload");

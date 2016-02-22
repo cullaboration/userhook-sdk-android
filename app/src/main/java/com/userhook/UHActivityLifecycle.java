@@ -22,7 +22,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
     private int activeActivities = 0;
     private long sessionStartTime, backgroundTime;
 
-    private static final int UH_TIME_BETWEEN_SESSIONS_IN_SECONDS = 600; // 5 minutes
+    private static final int UH_TIME_BETWEEN_SESSIONS_IN_SECONDS = 600; // 10 minutes
 
     private boolean fetchHookpointsOnSessionStart = false;
 
