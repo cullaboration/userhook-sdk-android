@@ -62,7 +62,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
                 && !intent.getBooleanExtra(UserHook.UH_PUSH_TRACKED, false)) {
 
             UserHook.trackPushOpen(intent.getBundleExtra(UserHook.UH_PUSH_DATA));
-            intent.putExtra(UserHook.UH_PUSH_TRACKED, true);
+            intent.removeExtra(UserHook.UH_PUSH_TRACKED);
         }
 
     }
