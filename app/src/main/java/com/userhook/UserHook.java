@@ -11,14 +11,12 @@ package com.userhook;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -60,6 +58,9 @@ public class UserHook {
     private static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
 
     protected static UHHookPointActionListener actionListener;
+
+    // resource id of icon to use for push notification
+    protected static int pushNotificationIcon;
 
 
     protected static int customPromptLayout = 0;
@@ -121,6 +122,10 @@ public class UserHook {
 
     public static void setCustomPromptLayout(int customPromptLayoutId) {
         customPromptLayout = customPromptLayoutId;
+    }
+
+    public static void setPushNotificationIcon(int pushNotificationIconId) {
+        pushNotificationIcon = pushNotificationIconId;
     }
 
     public static void setFeedbackListener(UHFeedbackListener listener) {
@@ -236,8 +241,14 @@ public class UserHook {
         try {
             ApplicationInfo appInfo = applicationContext.getPackageManager().getApplicationInfo(applicationContext.getPackageName(), PackageManager.GET_META_DATA);
 
+            int pushIcon = appInfo.icon;
+            // check for a custom push icon
+            if (pushNotificationIcon > 0) {
+                pushIcon = pushNotificationIcon;
+            }
+
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(applicationContext)
-                    .setSmallIcon(appInfo.icon)
+                    .setSmallIcon(pushIcon)
                     .setContentText(message)
                     .setContentTitle(title)
                     .setAutoCancel(true)
