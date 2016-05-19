@@ -99,6 +99,16 @@ public class MainActivity extends AppCompatActivity
         loadStaticPages();
     }
 
+    /*
+    If your activity uses launchMode="singleTop", you will need to override the onNewIntent
+    with the code below to properly track push notifications opens
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

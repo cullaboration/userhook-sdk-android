@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -236,7 +237,9 @@ public class UserHook {
         intent.putExtra(UserHook.UH_PUSH_DATA, data);
         intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+
+        //PendingIntent.FLAG_UPDATE_CURRENT is required to pass along our Intent Extras
+        PendingIntent pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         try {
             ApplicationInfo appInfo = applicationContext.getPackageManager().getApplicationInfo(applicationContext.getPackageName(), PackageManager.GET_META_DATA);
