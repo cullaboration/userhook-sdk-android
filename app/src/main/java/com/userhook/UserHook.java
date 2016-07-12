@@ -66,6 +66,10 @@ public class UserHook {
 
     protected static int customPromptLayout = 0;
 
+    // user to determine if push message is from User Hook
+    private static final String PUSH_SOURCE_PARAM = "source";
+    private static final String PUSH_SOURCE_VALUE = "userhook";
+
     public static void initialize(Application application, String userHookAppId, String userHookApiKey, boolean fetchHookpointsOnSessionStart) {
 
         applicationContext = application;
@@ -188,6 +192,16 @@ public class UserHook {
 
     public static void setPushMessageListener(UHPushMessageListener listener) {
         pushMessageListener = listener;
+    }
+
+    /**
+     * Checks a push notification to see if it came from User Hook or another service
+     *
+     * @param data
+     * @return boolean if push message originated from User Hook
+     */
+    public static boolean isPushFromUserHook(Bundle data) {
+        return data != null && data.containsKey(PUSH_SOURCE_PARAM) && data.get(PUSH_SOURCE_PARAM).equals(PUSH_SOURCE_VALUE);
     }
 
     public static Notification handlePushMessage(Bundle data) {

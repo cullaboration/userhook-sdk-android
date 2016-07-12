@@ -27,11 +27,20 @@ public class UHGcmListenerService extends GcmListenerService {
     @Override
     public void onMessageReceived(String from, Bundle data) {
 
-        Notification notification = UserHook.handlePushMessage(data);
+        // first check if this message originated from User Hook or another push provider
+        if (UserHook.isPushFromUserHook(data)) {
 
-        if (notification != null) {
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(0, notification);
+            Notification notification = UserHook.handlePushMessage(data);
+
+            if (notification != null) {
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(0, notification);
+            }
+        }
+        else {
+            // push is from a different push provider
+            // use the appropriate logic from that push provider
+            // to handle push message
         }
 
     }
