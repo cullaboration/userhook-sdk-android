@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 - present, Cullaboration Media, LLC.
  * All rights reserved.
- *
+ * <p/>
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -19,6 +19,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -27,13 +29,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.userhook.UHHookPoint;
-import com.userhook.UHHostedPageActivity;
-import com.userhook.UHOperation;
-import com.userhook.UHPage;
-import com.userhook.UHPromptView;
-import com.userhook.UHUser;
+import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.model.UHMessageMetaButton;
+import com.userhook.view.UHHostedPageActivity;
+import com.userhook.util.UHOperation;
+import com.userhook.model.UHPage;
+import com.userhook.view.UHPromptView;
+import com.userhook.util.UHUser;
 import com.userhook.UserHook;
+
+import org.xml.sax.XMLReader;
 
 import java.util.HashMap;
 import java.util.List;
@@ -107,6 +112,19 @@ public class MainActivity extends AppCompatActivity
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+
+        // check for deep link
+
+        if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+            Uri uri = intent.getData();
+
+            // respond to deep link for url, userhookdemo://product
+            if (uri.getHost().equals("product")) {
+                Intent newIntent = new Intent(MainActivity.this, PurchaseActivity.class);
+                startActivity(newIntent);
+            }
+
+        }
     }
 
     @Override
@@ -155,38 +173,30 @@ public class MainActivity extends AppCompatActivity
             intent.putExtra(UHHostedPageActivity.TYPE_PAGE, page);
             startActivity(intent);
 
-        }
-        else if (id == R.id.nav_feedback) {
+        } else if (id == R.id.nav_feedback) {
             clickedFeedback();
 
         } else if (id == R.id.nav_rate) {
 
-
-            final UHPromptView dialog = new UHPromptView(this);
-            dialog.getLabel().setText("We are glad you downloaded the app. Are you enjoying using it?");
-            dialog.getNegativeButton().setText("No");
-            dialog.getPositiveButton().setText("Yes");
-            dialog.getPositiveButton().setOnClickListener(new View.OnClickListener() {
+            UHMessageMetaButton button1 = new UHMessageMetaButton();
+            button1.setTitle("Yes");
+            button1.setOnClickListener(new UHMessageMetaButton.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-
+                public void onClick() {
                     showRatingPrompt();
-                    dialog.hideDialog();
                 }
             });
 
-            dialog.getNegativeButton().setOnClickListener(new View.OnClickListener() {
+            UHMessageMetaButton button2 = new UHMessageMetaButton();
+            button2.setTitle("No");
+            button2.setOnClickListener(new UHMessageMetaButton.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-
+                public void onClick() {
                     showFeedbackPrompt();
-                    dialog.hideDialog();
                 }
             });
 
-
-            addView(dialog);
-            dialog.showDialog();
+            UserHook.displayPrompt("We are glad you downloaded the app. Are you enjoying using it?", button1, button2);
 
 
         } else if (id == R.id.nav_clear_session) {
@@ -205,78 +215,31 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public class UlTagHandler implements Html.TagHandler {
+        @Override
+        public void handleTag(boolean opening, String tag, Editable output,
+                              XMLReader xmlReader) {
+            if (tag.equals("ul") && !opening) output.append("\n");
+            if (tag.equals("li") && opening) output.append("\n\t•");
+        }
+    }
 
     public void clickedFeedback() {
 
-        Intent intent = new Intent(this, UHHostedPageActivity.class);
-        intent.putExtra(UHHostedPageActivity.TYPE_FEEDBACK, "Feedback");
-        startActivity(intent);
+        UserHook.showFeedback();
 
     }
 
     public void showFeedbackPrompt() {
 
-        final UHPromptView dialog = new UHPromptView(this);
-        dialog.getLabel().setText("We are sorry to hear that you aren't enjoying the app. Do you mind sending us some feedback on how to make it better?");
-        dialog.getNegativeButton().setText("Not Now");
-        dialog.getPositiveButton().setText("Sure");
-        dialog.getPositiveButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                clickedFeedback();
-
-                dialog.hideDialog();
-            }
-        });
-
-        dialog.getNegativeButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                dialog.hideDialog();
-            }
-        });
-
-
-        addView(dialog);
-        dialog.showDialog();
+        UserHook.showFeedbackPrompt("We are sorry to hear that you aren't enjoying the app. Do you mind sending us some feedback on how to make it better?", "Sure", "Not Now");
 
 
     }
 
     public void showRatingPrompt() {
 
-        final UHPromptView dialog = new UHPromptView(this);
-        dialog.getLabel().setText("Great! A rating or review really helps us. Would you mind leaving us one now?");
-        dialog.getNegativeButton().setText("Not Now");
-        dialog.getPositiveButton().setText("Sure");
-        dialog.getPositiveButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("market://details?id=" + getPackageName()));
-                startActivity(intent);
-
-                // tell User Hook that this user has rated this app
-                UserHook.markAsRated();
-
-                dialog.hideDialog();
-            }
-        });
-
-        dialog.getNegativeButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                dialog.hideDialog();
-            }
-        });
-
-
-        addView(dialog);
-        dialog.showDialog();
+        UserHook.showRatingPrompt("Great! A rating or review really helps us. Would you mind leaving us one now?", "Sure", "Not Now");
 
     }
 

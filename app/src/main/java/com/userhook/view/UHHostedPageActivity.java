@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.userhook;
+package com.userhook.view;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +14,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import com.userhook.model.UHPage;
+import com.userhook.util.UHUser;
+import com.userhook.UserHook;
+import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.util.UHAsyncTask;
+import com.userhook.util.UHOperation;
+import com.userhook.util.UHPostAsyncTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -171,8 +179,8 @@ public class UHHostedPageActivity extends AppCompatActivity {
         public Map<String, String> createUserHookHeaders() {
             Map<String, String> headers = new HashMap<>();
 
-            headers.put(UHOperation.UH_APP_ID_HEADER_NAME, UserHook.appId);
-            headers.put(UHOperation.UH_APP_KEY_HEADER_NAME, UserHook.apiKey);
+            headers.put(UHOperation.UH_APP_ID_HEADER_NAME, UserHook.getAppId());
+            headers.put(UHOperation.UH_APP_KEY_HEADER_NAME, UserHook.getApiKey());
 
             // add user header values if available
             if (UHUser.getUserId() != null) {

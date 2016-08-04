@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.userhook;
+package com.userhook.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -19,7 +19,9 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.userhook.UserHook;
 
+@Deprecated
 public class UHPromptView extends RelativeLayout {
 
     protected TextView label;

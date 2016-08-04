@@ -5,10 +5,12 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package com.userhook;
+package com.userhook.util;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.userhook.UserHook;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -57,8 +59,8 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
             conn.setRequestMethod(method);
-            conn.setRequestProperty(UHOperation.UH_APP_ID_HEADER_NAME, UserHook.appId);
-            conn.setRequestProperty(UHOperation.UH_APP_KEY_HEADER_NAME, UserHook.apiKey);
+            conn.setRequestProperty(UHOperation.UH_APP_ID_HEADER_NAME, UserHook.getAppId());
+            conn.setRequestProperty(UHOperation.UH_APP_KEY_HEADER_NAME, UserHook.getApiKey());
 
             // add user header values if available
             if (UHUser.getUserId() != null) {
@@ -93,7 +95,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
             return responseStrBuilder.toString();
 
         } catch (Exception e) {
-            Log.e("userhook", "error in userhook async request", e);
+            Log.e(UserHook.TAG, "error in userhook async request", e);
             return null;
         }
 
@@ -120,7 +122,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
             }
         }
         catch (Exception e) {
-            Log.e("userhook","error prepping data for request", e);
+            Log.e(UserHook.TAG,"error prepping data for request", e);
         }
 
         return str;

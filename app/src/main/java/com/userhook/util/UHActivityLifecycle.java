@@ -6,13 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.userhook;
+package com.userhook.util;
 
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.UserHook;
 
 import java.util.HashMap;
 import java.util.Map;

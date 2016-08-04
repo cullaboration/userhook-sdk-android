@@ -16,12 +16,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.ViewGroup;
 
+import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.model.UHMessageMeta;
+import com.userhook.model.UHMessageMetaButton;
 import com.userhook.push.UHRegistrationIntentService;
+import com.userhook.util.UHActivityLifecycle;
+import com.userhook.util.UHJsonUtils;
+import com.userhook.util.UHOperation;
+import com.userhook.view.UHHostedPageActivity;
+import com.userhook.view.UHMessageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +39,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserHook {
+
+    public static final String TAG = "uh";
 
     static Context applicationContext;
     static String appId;
@@ -45,9 +56,8 @@ public class UserHook {
     public static final String UH_HOST_URL = "https://formhost.userhook.com";
 
     public static final String UH_URL_SCHEMA = "uh://";
-    public static final String UH_PROTOCOL = "userhook";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.0";
+    public static final String UH_SDK_VERSION = "1.1.1";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
@@ -58,7 +68,7 @@ public class UserHook {
     private static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
     private static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
 
-    protected static UHHookPointActionListener actionListener;
+    protected static UHPayloadListener payloadListener;
 
     // resource id of icon to use for push notification
     protected static int pushNotificationIcon;
@@ -69,6 +79,11 @@ public class UserHook {
     // user to determine if push message is from User Hook
     private static final String PUSH_SOURCE_PARAM = "source";
     private static final String PUSH_SOURCE_VALUE = "userhook";
+
+
+    // application settings for feedback page
+    private static String feedbackScreenTitle = "Feedback";
+    private static Map<String,String> feedbackCustomFields;
 
     public static void initialize(Application application, String userHookAppId, String userHookApiKey, boolean fetchHookpointsOnSessionStart) {
 
@@ -87,13 +102,13 @@ public class UserHook {
     }
 
 
-    public static void setHookPointActionListener(UHHookPointActionListener listener) {
-        actionListener = listener;
+    public static void setPayloadListener(UHPayloadListener listener) {
+        payloadListener = listener;
     }
 
     public static void actionReceived(Activity activity, Map<String, Object> payload) {
-        if (actionListener != null) {
-            actionListener.onAction(activity, payload);
+        if (payloadListener != null) {
+            payloadListener.onAction(activity, payload);
         }
     }
 
@@ -119,6 +134,18 @@ public class UserHook {
         data.put("purchases", sku);
         data.put("purchases_amount", price);
         operation.updateSessionData(data, listener);
+    }
+
+    public static String getAppId() {
+        return appId;
+    }
+
+    public static String getApiKey() {
+        return apiKey;
+    }
+
+    public static Context getApplicationContext() {
+        return applicationContext;
     }
 
     public static int getCustomPromptLayout() {
@@ -192,6 +219,10 @@ public class UserHook {
 
     public static void setPushMessageListener(UHPushMessageListener listener) {
         pushMessageListener = listener;
+    }
+
+    public static UHActivityLifecycle getActivityLifecycle() {
+        return activityLifecycle;
     }
 
     /**
@@ -288,7 +319,112 @@ public class UserHook {
         return applicationContext.getResources().getIdentifier(name, type, applicationContext.getPackageName());
     }
 
-    public interface UHHookPointActionListener {
+
+    public static void rateThisApp() {
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("market://details?id=" + applicationContext.getPackageName()));
+        activityLifecycle.getCurrentActivity().startActivity(intent);
+
+        // tell User Hook that this user has rated this app
+        UserHook.markAsRated();
+    }
+
+
+    public static void setFeedbackScreenTitle(String title){
+        feedbackScreenTitle = title;
+    }
+
+    public static void setFeedbackCustomFields(Map<String,String> customFields) {
+        feedbackCustomFields = customFields;
+    }
+
+    public static void showFeedback() {
+
+        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
+        intent.putExtra(UHHostedPageActivity.TYPE_FEEDBACK, feedbackScreenTitle);
+
+        if (feedbackCustomFields != null && feedbackCustomFields.size() > 0) {
+            Bundle bundle = new Bundle();
+            for (String key : feedbackCustomFields.keySet()) {
+                bundle.putString(key, feedbackCustomFields.get(key));
+            }
+            intent.putExtra(UH_CUSTOM_FIELDS, bundle);
+        }
+
+        activityLifecycle.getCurrentActivity().startActivity(intent);
+    }
+
+    public static void showSurvey(String surveyId, String surveyTitle, UHHookPoint hookPoint) {
+
+        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
+
+        intent.putExtra(UHHostedPageActivity.TYPE_SURVEY, surveyId);
+        intent.putExtra(UHHostedPageActivity.SURVEY_TITLE, surveyTitle);
+        if (hookPoint != null) {
+            intent.putExtra(UHHostedPageActivity.HOOKPOINT_ID, hookPoint.getId());
+        }
+
+        activityLifecycle.getCurrentActivity().startActivity(intent);
+    }
+
+    public static void displayPrompt(String message, UHMessageMetaButton button1, UHMessageMetaButton button2) {
+
+        UHMessageMeta meta = new UHMessageMeta();
+        meta.setBody(message);
+
+        if (button1 != null && button2 != null) {
+            meta.setDisplayType(UHMessageMeta.TYPE_TWO_BUTTONS);
+        }
+        else if (button1 != null) {
+            meta.setDisplayType(UHMessageMeta.TYPE_ONE_BUTTON);
+        }
+        else {
+            meta.setDisplayType(UHMessageMeta.TYPE_NO_BUTTONS);
+        }
+
+        meta.setButton1(button1);
+        meta.setButton2(button2);
+
+        // add view to screen
+        UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
+        ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
+        rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        view.showDialog();
+    }
+
+    public static void showRatingPrompt(String message, String postiveButtonTitle, String negativeButtonTitle) {
+
+        UHMessageMetaButton button1 = new UHMessageMetaButton();
+        button1.setTitle(postiveButtonTitle);
+        button1.setClick(UHMessageMeta.CLICK_RATE);
+
+        UHMessageMetaButton button2 = new UHMessageMetaButton();
+        button2.setTitle(negativeButtonTitle);
+        button2.setClick(UHMessageMeta.CLICK_CLOSE);
+
+        displayPrompt(message, button1, button2);
+
+        UserHook.markAsRated();
+    }
+
+    public static void showFeedbackPrompt(String message, String postiveButtonTitle, String negativeButtonTitle) {
+
+        UHMessageMetaButton button1 = new UHMessageMetaButton();
+        button1.setTitle(postiveButtonTitle);
+        button1.setClick(UHMessageMeta.CLICK_FEEDBACK);
+
+        UHMessageMetaButton button2 = new UHMessageMetaButton();
+        button2.setTitle(negativeButtonTitle);
+        button2.setClick(UHMessageMeta.CLICK_CLOSE);
+
+        displayPrompt(message, button1, button2);
+
+        UserHook.markAsRated();
+    }
+
+    public interface UHPayloadListener {
 
         void onAction(Activity activity, Map<String, Object> payload);
     }

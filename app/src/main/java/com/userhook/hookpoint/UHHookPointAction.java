@@ -6,11 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.userhook;
+package com.userhook.hookpoint;
 
 import android.app.Activity;
 import android.util.Log;
 
+import com.userhook.UserHook;
+import com.userhook.util.UHJsonUtils;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -19,26 +23,24 @@ public class UHHookPointAction extends UHHookPoint {
 
     protected Map<String, Object> payload;
 
-    protected UHHookPointAction(Map<String, Object> data) {
-        super(data);
+    protected UHHookPointAction(JSONObject json) {
+        super(json);
 
-        Map<String, Object> meta = (Map<String, Object>) data.get("meta");
+        try {
 
-        if (meta != null) {
-            if (meta.containsKey("payload")) {
-                String payloadString = (String) meta.get("payload");
-                try {
+            if (json.has("meta")) {
+                JSONObject meta = json.getJSONObject("meta");
 
+                if (meta != null && meta.has("payload")) {
+                    String payloadString = (String) meta.get("payload");
                     JSONObject payloadJson = new JSONObject(payloadString);
                     payload = UHJsonUtils.toMap(payloadJson);
-
-                } catch (Exception e) {
-                    Log.e("userhook", "error converting payload to map", e);
                 }
-
             }
 
-
+        }
+        catch (JSONException je) {
+            Log.e(UserHook.TAG, "error parsing action hook point json", je);
         }
 
     }

@@ -47,34 +47,4 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <style name="UHPromptOverlay">
-        <item name="android:background">#99000000</item>
-    </style>
-
-    <style name="UHPromptContent">
-        <item name="android:background">@android:color/white</item>
-    </style>
-
-    <style name="UHPromptText">
-        <item name="android:gravity">center</item>
-        <item name="android:textSize">16dp</item>
-    </style>
-
-    <style name="UHPositiveButton">
-        <item name="android:paddingLeft">10dp</item>
-        <item name="android:paddingRight">10dp</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:background">@color/colorPrimary</item>
-    </style>
-
-    <style name="UHNegativeButton">
-        <item name="android:paddingLeft">10dp</item>
-        <item name="android:paddingRight">10dp</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:background">@color/colorPrimary</item>
-    </style>
-
-
 </resources>

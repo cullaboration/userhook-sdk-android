@@ -6,41 +6,58 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.userhook;
+package com.userhook.hookpoint;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.userhook.util.UHJsonUtils;
+import com.userhook.view.UHPromptView;
+import com.userhook.UserHook;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Map;
 
-public class UHHookPointRatingPrompt extends UHHookPoint {
+@Deprecated
+public class UHHookPointActionPrompt extends UHHookPointAction {
 
     protected String negativeButtonLabel;
     protected String positiveButtonLabel;
     protected String promptMessage;
 
-    protected UHHookPointRatingPrompt(Map<String, Object> data) {
-        super(data);
+    protected UHHookPointActionPrompt(JSONObject json) {
+        super(json);
 
-        Map<String,Object> meta = (Map<String,Object>)data.get("meta");
+        try {
 
-        if (meta != null) {
-            if (meta.containsKey("negativeButtonLabel")) {
-                negativeButtonLabel = (String)meta.get("negativeButtonLabel");
-            }
+            if (json.has("meta")) {
+                JSONObject meta = json.getJSONObject("meta");
 
-            if (meta.containsKey("positiveButtonLabel")) {
-                positiveButtonLabel = (String)meta.get("positiveButtonLabel");
-            }
+                if (meta != null) {
 
-            if (meta.containsKey("promptMessage")) {
-                promptMessage = (String)meta.get("promptMessage");
+                    if (meta.has("negativeButtonLabel")) {
+                        negativeButtonLabel = meta.getString("negativeButtonLabel");
+                    }
+                    if (meta.has("positiveButtonLabel")) {
+                        positiveButtonLabel = meta.getString("positiveButtonLabel");
+                    }
+                    if (meta.has("promptMessage")) {
+                        promptMessage = meta.getString("promptMessage");
+                    }
+                }
             }
 
         }
+        catch (JSONException je) {
+            Log.e(UserHook.TAG, "error parsing action hook point json", je);
+        }
+
+
+
 
     }
 
@@ -57,16 +74,10 @@ public class UHHookPointRatingPrompt extends UHHookPoint {
             @Override
             public void onClick(View v) {
 
-                // open the review page on google play
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("market://details?id=" + activity.getPackageName()));
-                activity.startActivity(intent);
 
+                UserHook.actionReceived(activity, payload);
 
                 UserHook.trackHookPointInteraction(hookPoint);
-
-                // mark that the user has "rated" this app
-                UserHook.markAsRated();
 
                 promptView.hideDialog();
 
@@ -87,7 +98,7 @@ public class UHHookPointRatingPrompt extends UHHookPoint {
 
                 // check for current activity so we have the top most activity in case another activity
                 // has started since the hookpoints were loaded
-                Activity currentActivity = UserHook.activityLifecycle.getCurrentActivity();
+                Activity currentActivity = UserHook.getActivityLifecycle().getCurrentActivity();
                 ViewGroup rootView = (ViewGroup) currentActivity.findViewById(android.R.id.content);
                 rootView.addView(promptView);
                 promptView.showDialog();
@@ -97,5 +108,4 @@ public class UHHookPointRatingPrompt extends UHHookPoint {
         });
 
     }
-
 }

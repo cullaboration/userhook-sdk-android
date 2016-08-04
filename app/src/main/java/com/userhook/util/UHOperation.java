@@ -5,11 +5,15 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package com.userhook;
+package com.userhook.util;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+
+import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.UserHook;
+import com.userhook.model.UHPage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -37,7 +42,9 @@ public class UHOperation {
     private static final String UH_PATH_PAGES = "/page";
     private static final String UH_PATH_PUSH_REGISTER = "/push/register";
     private static final String UH_PATH_PUSH_OPEN = "/push/open";
+    private static final String UH_PATH_MESSAGE_TEMPLATES = "/message/templates";
 
+    private static boolean fetchingHookpoints = false;
 
     public void createSession(UserHook.UHSuccessListener listener) {
 
@@ -52,6 +59,8 @@ public class UHOperation {
 
         updateSessionData(data, listener);
 
+        // prefetch message templates
+        fetchMessageTemplates();
     }
 
 
@@ -105,11 +114,11 @@ public class UHOperation {
                             listener.onSuccess();
                         }
                     } else {
-                        Log.e("userhook", "userhook response status was error");
+                        Log.e(UserHook.TAG, "userhook response status was error");
                     }
 
                 } catch (Exception e) {
-                    Log.e("userhook", "error updating session data", e);
+                    Log.e(UserHook.TAG, "error updating session data", e);
                 }
 
             }
@@ -140,10 +149,7 @@ public class UHOperation {
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject item = data.getJSONObject(i);
 
-                            String slug = item.getString("slug");
-                            String name = item.getString("name");
-
-                            pages.add(new UHPage(slug, name));
+                            pages.add(new UHPage(item));
 
                         }
 
@@ -152,11 +158,11 @@ public class UHOperation {
                         }
 
                     } else {
-                        Log.e("userhook", "userhook response status was error for page name fetch");
+                        Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
                     }
 
                 } catch (Exception e) {
-                    Log.e("userhook", "error fetching page names", e);
+                    Log.e(UserHook.TAG, "error fetching page names", e);
                 }
 
             }
@@ -167,12 +173,66 @@ public class UHOperation {
 
     }
 
+
+    public void fetchMessageTemplates() {
+
+
+        UHAsyncTask task = new UHAsyncTask(new HashMap<String, Object>(), new UHAsyncTask.UHAsyncTaskListener() {
+            @Override
+            public void onSuccess(String string) {
+
+                if (string == null) {
+                    return;
+                }
+
+                try {
+
+                    JSONObject json = new JSONObject(string);
+
+                    if (json != null && json.has("templates")) {
+
+                        JSONObject data = json.getJSONObject("templates");
+
+                        Iterator<String> iter = data.keys();
+                        while (iter.hasNext()) {
+                            String name = iter.next();
+                            String template = data.getString(name);
+
+                            UHMessageTemplate.getInstance().addToCache(name, template);
+
+                        }
+
+
+
+                    } else {
+                        Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
+                    }
+
+                } catch (Exception e) {
+                    Log.e(UserHook.TAG, "error fetching page names", e);
+                }
+
+            }
+        });
+
+
+        task.execute(UserHook.UH_HOST_URL + UH_PATH_MESSAGE_TEMPLATES);
+
+    }
+
     public void fetchHookpoint(final UserHook.UHHookPointFetchListener listener) {
 
         if (UHUser.getUserId() == null) {
-            Log.e("userhook", "cannot fetch hookpoint, user id is null");
+            Log.e(UserHook.TAG, "cannot fetch hookpoint, user id is null");
             return;
         }
+
+        // only allow one fetch at a time
+        if (fetchingHookpoints) {
+            return;
+        }
+
+        fetchingHookpoints = true;
 
         Map<String, Object> params = new HashMap<>();
         params.put("user", UHUser.getUserId());
@@ -180,6 +240,8 @@ public class UHOperation {
         UHAsyncTask task = new UHAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
+
+                fetchingHookpoints = false;
 
                 try {
 
@@ -193,9 +255,8 @@ public class UHOperation {
 
                         if (data.has("hookpoint") && !data.isNull("hookpoint")) {
                             JSONObject hookpointData = data.getJSONObject("hookpoint");
-                            Map<String, Object> mapData = UHJsonUtils.toMap(hookpointData);
 
-                            hookPoint = UHHookPoint.createWithData(mapData);
+                            hookPoint = UHHookPoint.createWithData(hookpointData);
 
                         }
 
@@ -204,7 +265,7 @@ public class UHOperation {
                         }
 
                     } else {
-                        Log.e("userhook", "userhook response status was error for fetch hookpoint");
+                        Log.e(UserHook.TAG, "userhook response status was error for fetch hookpoint");
 
                         if (listener != null) {
                             listener.onError();
@@ -212,7 +273,7 @@ public class UHOperation {
                     }
 
                 } catch (Exception e) {
-                    Log.e("userhook", "error fetching hookpoint", e);
+                    Log.e(UserHook.TAG, "error fetching hookpoint", e);
 
                     if (listener != null) {
                         listener.onError();
@@ -234,7 +295,7 @@ public class UHOperation {
         params.put("action", action);
 
         if (UHUser.getUserId() == null) {
-            Log.e("userhook", "cannot track hookpoint, user id is null");
+            Log.e(UserHook.TAG, "cannot track hookpoint, user id is null");
             return;
         }
 
@@ -253,12 +314,12 @@ public class UHOperation {
 
 
                     } else {
-                        Log.e("userhook", "userhook response status was error for track hookpoint");
+                        Log.e(UserHook.TAG, "userhook response status was error for track hookpoint");
 
                     }
 
                 } catch (Exception e) {
-                    Log.e("userhook", "error tracking hookpoint", e);
+                    Log.e(UserHook.TAG, "error tracking hookpoint", e);
 
                 }
 
@@ -304,7 +365,7 @@ public class UHOperation {
         params.put("timezone_offset", UHDeviceInfo.getTimezoneOffset());
 
         if (UHUser.getUserId() == null) {
-            Log.e("userhook", "cannot register push token if user is null");
+            Log.e(UserHook.TAG, "cannot register push token if user is null");
             return;
         }
 
@@ -312,6 +373,11 @@ public class UHOperation {
         UHPostAsyncTask task = new UHPostAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
+
+                if (result == null) {
+                    Log.e("uh", "error registering push token, response was null");
+                    return;
+                }
 
                 try {
 
@@ -353,7 +419,7 @@ public class UHOperation {
         params.put("payload", payload);
 
         if (UHUser.getUserId() == null) {
-            Log.e("userhook", "cannot track push token if user is null");
+            Log.e(UserHook.TAG, "cannot track push token if user is null");
             return;
         }
 
