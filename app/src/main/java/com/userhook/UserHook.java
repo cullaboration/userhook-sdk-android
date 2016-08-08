@@ -322,14 +322,24 @@ public class UserHook {
 
     public static void rateThisApp() {
 
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("market://details?id=" + applicationContext.getPackageName()));
-        activityLifecycle.getCurrentActivity().startActivity(intent);
+        startActivityToRate();
 
         // tell User Hook that this user has rated this app
         UserHook.markAsRated();
     }
 
+    private static void startActivityToRate() {
+        Uri uri = Uri.parse("market://details?id=" + applicationContext.getPackageName());
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        if (goToMarket.resolveActivity(applicationContext.getPackageManager()) != null) {
+            activityLifecycle.getCurrentActivity().startActivity(goToMarket);
+            return;
+        }
+
+        activityLifecycle.getCurrentActivity().startActivity(new Intent(Intent.ACTION_VIEW,
+                Uri.parse("http://play.google.com/store/apps/details?id=" + applicationContext.getPackageName())));
+    }
 
     public static void setFeedbackScreenTitle(String title){
         feedbackScreenTitle = title;
