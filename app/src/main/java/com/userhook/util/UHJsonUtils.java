@@ -47,6 +47,20 @@ public class UHJsonUtils {
         return jsonObject;
     }
 
+    public static Map<String,Object> bundleToMap(Bundle object) {
+
+        try {
+            JSONObject json = toJSON(object);
+
+            if (json != null) {
+                return toMap(json);
+            }
+        }
+        catch (JSONException je) {}
+
+        return null;
+    }
+
     private static Object fromJson(Object json) throws JSONException {
         if (json == JSONObject.NULL) {
             return null;

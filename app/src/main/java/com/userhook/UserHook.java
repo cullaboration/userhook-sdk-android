@@ -57,11 +57,12 @@ public class UserHook {
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.1.1";
+    public static final String UH_SDK_VERSION = "1.1.2";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
     public static final String UH_PUSH_DATA = "uh_push_data";
+    public static final String UH_PUSH_PAYLOAD = "uh_push_payload";
     public static final String UH_PUSH_TRACKED = "uh_push_tracked";
 
 
@@ -107,7 +108,7 @@ public class UserHook {
     }
 
     public static void actionReceived(Activity activity, Map<String, Object> payload) {
-        if (payloadListener != null) {
+        if (payloadListener != null && payload != null) {
             payloadListener.onAction(activity, payload);
         }
     }
@@ -235,6 +236,22 @@ public class UserHook {
         return data != null && data.containsKey(PUSH_SOURCE_PARAM) && data.get(PUSH_SOURCE_PARAM).equals(PUSH_SOURCE_VALUE);
     }
 
+    public static void handlePushPayload(Activity activity, String payloadString) {
+
+        try {
+            JSONObject json = new JSONObject(payloadString);
+            Map<String,Object> payload = UHJsonUtils.toMap(json);
+
+            if (payloadListener != null) {
+                payloadListener.onAction(activity, payload);
+            }
+        }
+        catch (JSONException je) {
+            Log.e(UserHook.TAG, "error handling push payload", je);
+        }
+
+    }
+
     public static Notification handlePushMessage(Bundle data) {
 
         String message = data.getString("message");
@@ -281,6 +298,9 @@ public class UserHook {
 
         intent.putExtra(UserHook.UH_PUSH_DATA, data);
         intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
+        if (payload.size() > 0) {
+            intent.putExtra(UserHook.UH_PUSH_PAYLOAD, data.getString("payload"));
+        }
 
 
         //PendingIntent.FLAG_UPDATE_CURRENT is required to pass along our Intent Extras
