@@ -47,6 +47,19 @@ public class UHJsonUtils {
         return jsonObject;
     }
 
+    public static JSONObject toJSON(Map<String,String> object) {
+
+        JSONObject jsonObject = new JSONObject();
+
+        for (String key : object.keySet()) {
+            try {
+                jsonObject.put(key, object.get(key));
+            }
+            catch (JSONException je) {}
+        }
+        return jsonObject;
+    }
+
     public static Map<String,Object> bundleToMap(Bundle object) {
 
         try {

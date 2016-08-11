@@ -11,8 +11,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
-import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.UserHook;
+import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHPage;
 
 import org.json.JSONArray;
@@ -406,7 +406,7 @@ public class UHOperation {
 
     }
 
-    public void trackPushOpen(Bundle data) {
+    public void trackPushOpen(Map<String,String> data) {
 
         Map<String, Object> params = new HashMap<>();
         if (UHUser.getUserId() != null) {

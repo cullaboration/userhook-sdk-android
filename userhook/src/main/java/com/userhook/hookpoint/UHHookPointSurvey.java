@@ -9,17 +9,12 @@
 package com.userhook.hookpoint;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.util.Log;
 
-import com.userhook.util.UHJsonUtils;
-import com.userhook.view.UHHostedPageActivity;
 import com.userhook.UserHook;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Map;
 
 
 public class UHHookPointSurvey extends UHHookPoint {

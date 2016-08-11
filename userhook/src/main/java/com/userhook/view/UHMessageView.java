@@ -110,7 +110,7 @@ public class UHMessageView extends RelativeLayout {
             overlay.setBackgroundColor(Color.parseColor("#99000000"));
             overlay.setVisibility(GONE);
 
-            addView(overlay, new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            addView(overlay, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             overlay.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -249,7 +249,7 @@ public class UHMessageView extends RelativeLayout {
                             imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                             imageView.setImageDrawable(result);
 
-                            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams((int) width, (int) height);
+                            LayoutParams layoutParams = new LayoutParams((int) width, (int) height);
                             layoutParams.addRule(CENTER_IN_PARENT);
                             addView(imageView, layoutParams);
 
@@ -323,7 +323,7 @@ public class UHMessageView extends RelativeLayout {
         final float scale = getResources().getDisplayMetrics().density;
         int width = (int) (dialogWidth * scale);
 
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LayoutParams layoutParams = new LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.addRule(CENTER_IN_PARENT);
         addView(webView, layoutParams);
 

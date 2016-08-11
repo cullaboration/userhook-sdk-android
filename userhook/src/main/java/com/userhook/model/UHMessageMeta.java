@@ -11,7 +11,6 @@ package com.userhook.model;
 import android.util.Log;
 
 import com.userhook.UserHook;
-import com.userhook.util.UHJsonUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;

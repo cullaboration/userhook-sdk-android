@@ -15,13 +15,13 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.userhook.model.UHPage;
-import com.userhook.util.UHUser;
 import com.userhook.UserHook;
 import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.model.UHPage;
 import com.userhook.util.UHAsyncTask;
 import com.userhook.util.UHOperation;
 import com.userhook.util.UHPostAsyncTask;
+import com.userhook.util.UHUser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,8 +88,10 @@ public class UHHostedPageActivity extends AppCompatActivity {
 
             setSupportActionBar(toolbar);
 
-            // override left icon
-            toolbar.setNavigationIcon(UserHook.getResourceId("abc_ic_ab_back_mtrl_am_alpha","drawable"));
+            // make home button show as back arrow
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
 
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override

@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 - present, Cullaboration Media, LLC.
  * All rights reserved.
- *
+ * <p/>
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -10,27 +10,22 @@ package com.userhook.push;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
-import com.google.android.gms.gcm.GcmListenerService;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 import com.userhook.UserHook;
 
-public class UHGcmListenerService extends GcmListenerService {
+public class UHFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
-    public void onMessageReceived(String from, Bundle data) {
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+
 
         // check if this message originated from User Hook or another push provider
-        if (UserHook.isPushFromUserHook(data)) {
+        if (UserHook.isPushFromUserHook(remoteMessage.getData())) {
 
-            Notification notification = UserHook.handlePushMessage(data);
+            Notification notification = UserHook.handlePushMessage(remoteMessage.getData());
 
             if (notification != null) {
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -44,6 +39,5 @@ public class UHGcmListenerService extends GcmListenerService {
         }
 
     }
-
 
 }

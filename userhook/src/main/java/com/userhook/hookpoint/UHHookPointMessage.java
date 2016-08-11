@@ -14,13 +14,10 @@ import android.view.ViewGroup;
 
 import com.userhook.UserHook;
 import com.userhook.model.UHMessageMeta;
-import com.userhook.util.UHJsonUtils;
 import com.userhook.view.UHMessageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Map;
 
 public class UHHookPointMessage extends UHHookPoint {
 

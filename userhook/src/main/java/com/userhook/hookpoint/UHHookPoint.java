@@ -15,8 +15,6 @@ import com.userhook.UserHook;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Map;
-
 public class UHHookPoint {
 
     protected String id;
@@ -72,10 +70,6 @@ public class UHHookPoint {
                 object = new UHHookPointAction(json);
             } else if (type.equalsIgnoreCase(TYPE_SURVEY)) {
                 object = new UHHookPointSurvey(json);
-            } else if (type.equalsIgnoreCase(TYPE_RATING_PROMPT)) {
-                object = new UHHookPointRatingPrompt(json);
-            } else if (type.equalsIgnoreCase(TYPE_ACTION_PROMPT)) {
-                object = new UHHookPointActionPrompt(json);
             } else if (type.equalsIgnoreCase(TYPE_MESSAGE)) {
                 object = new UHHookPointMessage(json);
             } else {

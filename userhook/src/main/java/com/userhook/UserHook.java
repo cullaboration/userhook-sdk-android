@@ -19,13 +19,13 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 import android.view.ViewGroup;
 
 import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHMessageMeta;
 import com.userhook.model.UHMessageMetaButton;
-import com.userhook.push.UHRegistrationIntentService;
 import com.userhook.util.UHActivityLifecycle;
 import com.userhook.util.UHJsonUtils;
 import com.userhook.util.UHOperation;
@@ -35,6 +35,7 @@ import com.userhook.view.UHMessageView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public class UserHook {
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.1.2";
+    public static final String UH_SDK_VERSION = "1.2.1";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
@@ -95,10 +96,6 @@ public class UserHook {
         // add the activity lifecycle listener
         activityLifecycle = new UHActivityLifecycle(fetchHookpointsOnSessionStart);
         application.registerActivityLifecycleCallbacks(activityLifecycle);
-
-        // register for push
-        Intent registerIntent = new Intent(application, UHRegistrationIntentService.class);
-        application.startService(registerIntent);
 
     }
 
@@ -213,7 +210,7 @@ public class UserHook {
         operation.registerPushToken(token, 1);
     }
 
-    public static void trackPushOpen(Bundle data) {
+    public static void trackPushOpen(Map<String,String> data) {
         UHOperation operation = new UHOperation();
         operation.trackPushOpen(data);
     }
@@ -232,7 +229,7 @@ public class UserHook {
      * @param data
      * @return boolean if push message originated from User Hook
      */
-    public static boolean isPushFromUserHook(Bundle data) {
+    public static boolean isPushFromUserHook(Map<String,String> data) {
         return data != null && data.containsKey(PUSH_SOURCE_PARAM) && data.get(PUSH_SOURCE_PARAM).equals(PUSH_SOURCE_VALUE);
     }
 
@@ -252,13 +249,13 @@ public class UserHook {
 
     }
 
-    public static Notification handlePushMessage(Bundle data) {
+    public static Notification handlePushMessage(Map<String,String> data) {
 
-        String message = data.getString("message");
+        String message = data.get("message");
         String title = "";
 
-        if (data.containsKey("title") && data.getString("title") != null) {
-            title = data.getString("title");
+        if (data.containsKey("title") && data.get("title") != null) {
+            title = data.get("title");
         } else {
             title = applicationContext.getApplicationInfo().loadLabel(applicationContext.getPackageManager()).toString();
         }
@@ -267,7 +264,7 @@ public class UserHook {
         Map<String, Object> payload = new HashMap<>();
         if (data.containsKey("payload")) {
             try {
-                JSONObject json = new JSONObject(data.getString("payload"));
+                JSONObject json = new JSONObject(data.get("payload"));
                 payload = UHJsonUtils.toMap(json);
 
                 // check if this is a feedback reply
@@ -296,10 +293,19 @@ public class UserHook {
             intent = applicationContext.getPackageManager().getLaunchIntentForPackage(applicationContext.getPackageName());
         }
 
-        intent.putExtra(UserHook.UH_PUSH_DATA, data);
+        // convert data to a try Map<String,String> since it will come in as an ArrayMap
+        if (data instanceof ArrayMap) {
+            HashMap<String,String> hashMap = new HashMap<>();
+            for (String key : data.keySet()) {
+                hashMap.put(key, data.get(key));
+            }
+            data = hashMap;
+        }
+
+        intent.putExtra(UserHook.UH_PUSH_DATA, (Serializable)data);
         intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
         if (payload.size() > 0) {
-            intent.putExtra(UserHook.UH_PUSH_PAYLOAD, data.getString("payload"));
+            intent.putExtra(UserHook.UH_PUSH_PAYLOAD, data.get("payload"));
         }
 
 
@@ -337,6 +343,10 @@ public class UserHook {
 
     public static int getResourceId(String name, String type) {
         return applicationContext.getResources().getIdentifier(name, type, applicationContext.getPackageName());
+    }
+
+    public static String getString(int id) {
+        return applicationContext.getResources().getString(id);
     }
 
 

@@ -14,8 +14,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.UserHook;
+import com.userhook.hookpoint.UHHookPoint;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +71,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
             }
 
             // track open
-            UserHook.trackPushOpen(intent.getBundleExtra(UserHook.UH_PUSH_DATA));
+            UserHook.trackPushOpen((Map<String,String>)intent.getSerializableExtra(UserHook.UH_PUSH_DATA));
             intent.removeExtra(UserHook.UH_PUSH_TRACKED);
         }
 
