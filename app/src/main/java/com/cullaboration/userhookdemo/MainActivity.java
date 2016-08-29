@@ -34,7 +34,6 @@ import com.userhook.model.UHMessageMetaButton;
 import com.userhook.view.UHHostedPageActivity;
 import com.userhook.util.UHOperation;
 import com.userhook.model.UHPage;
-import com.userhook.view.UHPromptView;
 import com.userhook.util.UHUser;
 import com.userhook.UserHook;
 

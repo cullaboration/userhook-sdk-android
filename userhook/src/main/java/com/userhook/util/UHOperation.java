@@ -9,6 +9,7 @@ package com.userhook.util;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.userhook.UserHook;
@@ -346,7 +347,7 @@ public class UHOperation {
                 final int newRetryCount = retryCount++;
 
                 // wait 5 seconds and then try to register
-                Handler handler = new Handler();
+                Handler handler = new Handler(Looper.getMainLooper());
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {

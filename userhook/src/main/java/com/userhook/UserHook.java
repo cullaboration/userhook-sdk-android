@@ -58,7 +58,7 @@ public class UserHook {
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.2.1";
+    public static final String UH_SDK_VERSION = "1.2.2";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
