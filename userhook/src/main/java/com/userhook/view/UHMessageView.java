@@ -319,6 +319,10 @@ public class UHMessageView extends RelativeLayout {
         webView.setWebViewClient(new MessageWebViewClient());
         webView.getSettings().setJavaScriptEnabled(true);
 
+        // set background of webview to be transparent
+        webView.setBackgroundColor(Color.TRANSPARENT);
+        webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+
         // find dialog width in pixels
         final float scale = getResources().getDisplayMetrics().density;
         int width = (int) (dialogWidth * scale);
