@@ -97,6 +97,8 @@ public class UserHook {
         activityLifecycle = new UHActivityLifecycle(fetchHookpointsOnSessionStart);
         application.registerActivityLifecycleCallbacks(activityLifecycle);
 
+        Log.d(TAG, "user hook initialized for app: " + userHookApiKey);
+
     }
 
 
