@@ -27,6 +27,11 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
+task copyLibs(type: Copy) {
+    from configurations.compile
+    into 'libs'
+}
+
 artifacts {
     archives sourcesJar
 }
