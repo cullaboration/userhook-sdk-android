@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2015 - present, Cullaboration Media, LLC.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package com.userhook.unity;
 
 import android.app.Activity;
@@ -9,6 +17,7 @@ import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.UnityPlayerActivity;
 import com.userhook.UserHook;
 import com.userhook.hookpoint.UHHookPoint;
+import com.userhook.model.UHMessageMetaButton;
 import com.userhook.model.UHPage;
 import com.userhook.util.UHJsonUtils;
 import com.userhook.util.UHOperation;
@@ -22,10 +31,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-/**
- * Created by mattjohnston on 11/17/16.
- */
 
 public class UserHookUnityProxy {
 
@@ -159,6 +164,109 @@ public class UserHookUnityProxy {
 
     }
 
+    public static void displayStaticPage(final String slug, final String title) {
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                UserHook.displayStaticPage(slug, title);
+            }
+        });
+    }
+
+    public static void displayPrompt(final String message, final String button1, final String button2) {
+
+        UHMessageMetaButton btn1 = null;
+        UHMessageMetaButton btn2 = null;
+
+        try {
+            if (button1 != null) {
+                JSONObject json1 = new JSONObject(button1);
+                btn1 = UHMessageMetaButton.fromJSON(json1);
+
+                if (json1.has("onClickGameObject") && json1.has("onClickFunction")) {
+                    btn1.setOnClickListener(new UHMessageMetaButton.OnClickListener() {
+                        @Override
+                        public void onClick() {
+                            UnityPlayer.UnitySendMessage("UserHook","handleResponse", button1);
+                        }
+                    });
+                }
+            }
+
+            if (button2 != null) {
+
+                JSONObject json2 = new JSONObject(button2);
+                btn2 = UHMessageMetaButton.fromJSON(json2);
+
+                if (json2.has("onClickGameObject") && json2.has("onClickFunction")) {
+                    btn2.setOnClickListener(new UHMessageMetaButton.OnClickListener() {
+                        @Override
+                        public void onClick() {
+                            UnityPlayer.UnitySendMessage("UserHook","handleResponse", button2);
+                        }
+                    });
+                }
+
+            }
+
+            final UHMessageMetaButton finalBtn1 = btn1;
+            final UHMessageMetaButton finalBtn2 = btn2;
+
+
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    UserHook.displayPrompt(message, finalBtn1, finalBtn2);
+                }
+            });
+
+
+
+        }
+        catch (JSONException je) {
+            Log.e(UserHook.TAG, "error displaying prompt with buttons", je);
+        }
+    }
+
+    public static void updateCustomFields(String fields, final String handler) {
+
+        if (fields != null && !fields.isEmpty()) {
+
+            try {
+                JSONObject json = new JSONObject(fields);
+
+                Map<String,Object> fieldsMap = UHJsonUtils.toMap(json);
+
+                UserHook.updateCustomFields(fieldsMap, new UserHook.UHSuccessListener() {
+                    @Override
+                    public void onSuccess() {
+
+                        UnityPlayer.UnitySendMessage("UserHook","handleResponse", handler);
+                    }
+                });
+            }
+            catch (JSONException je) {
+                Log.e(UserHook.TAG, "error updating custom fields", je);
+            }
+        }
+    }
+
+    public static void updatePurchasedItem(String sku, Double price, final String handler) {
+
+        if (sku != null && !sku.isEmpty()) {
+
+            UserHook.updatePurchasedItem(sku, price, new UserHook.UHSuccessListener() {
+                @Override
+                public void onSuccess() {
+                    UnityPlayer.UnitySendMessage("UserHook","handleResponse", handler);
+                }
+            });
+        }
+    }
+
 
     protected static Map<String,String> toMap(JSONObject object) throws JSONException{
 
@@ -170,4 +278,5 @@ public class UserHookUnityProxy {
         }
         return map;
     }
+
 }
