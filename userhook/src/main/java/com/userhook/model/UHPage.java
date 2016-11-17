@@ -21,6 +21,10 @@ public class UHPage implements Serializable {
     private String slug;
     private String name;
 
+    public UHPage() {
+
+    }
+
     public UHPage(JSONObject json) {
 
         try {
@@ -35,6 +39,13 @@ public class UHPage implements Serializable {
 
     }
 
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getSlug() {
         return slug;

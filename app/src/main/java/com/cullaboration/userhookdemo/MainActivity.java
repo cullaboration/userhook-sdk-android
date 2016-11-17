@@ -167,10 +167,10 @@ public class MainActivity extends AppCompatActivity
 
         if (staticPages.containsKey(item.getTitle())) {
 
+
             UHPage page = staticPages.get(item.getTitle());
-            Intent intent = new Intent(this, UHHostedPageActivity.class);
-            intent.putExtra(UHHostedPageActivity.TYPE_PAGE, page);
-            startActivity(intent);
+
+            UserHook.displayStaticPage(page.getSlug(), page.getName());
 
         } else if (id == R.id.nav_feedback) {
             clickedFeedback();
