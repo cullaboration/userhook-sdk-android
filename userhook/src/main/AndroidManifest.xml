@@ -1,54 +1,38 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.userhook">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.userhook">
 
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
 
-
-
         <!-- User Hook -->
-        <activity android:name="com.userhook.view.UHHostedPageActivity"
-            android:theme="@style/UserHook"
-            />
+        <activity
+            android:name="com.userhook.view.UHHostedPageActivity"
+            android:theme="@style/UserHook" />
 
         <!-- User Hook Push Setup -->
-        <service
-            android:name="com.userhook.push.UHFirebaseInstanceIdService">
+        <service android:name="com.userhook.push.UHFirebaseInstanceIdService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
 
-        <service
-            android:name="com.userhook.push.UHFirebaseMessagingService">
+        <service android:name="com.userhook.push.UHFirebaseMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
+        <!-- this values will be replaced during the unity compilation -->
+        <meta-data
+            android:name="userhookAppId"
+            android:value="{userhookAppId}" />
+        <meta-data
+            android:name="userhookAppKey"
+            android:value="{userhookAppKey}" />
 
-        <uses-permission android:name="android.permission.INTERNET" />
-
-        <!-- User Hook -->
-        <activity android:name="com.userhook.view.UHHostedPageActivity"
-            android:theme="@style/UserHook"
-            />
-
-        <!-- User Hook Push Setup -->
-        <service
-            android:name="com.userhook.push.UHFirebaseInstanceIdService">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service
-            android:name="com.userhook.push.UHFirebaseMessagingService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
 
     </application>
 
