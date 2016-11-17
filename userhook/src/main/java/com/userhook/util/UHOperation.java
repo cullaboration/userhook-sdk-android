@@ -89,6 +89,11 @@ public class UHOperation {
             public void onSuccess(String string) {
 
                 try {
+                    if (string == null || string.isEmpty()) {
+                        Log.e(UserHook.TAG,"update session server response was null");
+                        return;
+                    }
+
                     JSONObject json = new JSONObject(string);
 
                     if (json != null && json.has("status") && json.getString("status").equalsIgnoreCase("success")) {

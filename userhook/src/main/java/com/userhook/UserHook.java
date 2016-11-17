@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHMessageMeta;
 import com.userhook.model.UHMessageMetaButton;
+import com.userhook.model.UHPage;
 import com.userhook.util.UHActivityLifecycle;
 import com.userhook.util.UHJsonUtils;
 import com.userhook.util.UHOperation;
@@ -464,6 +465,18 @@ public class UserHook {
         displayPrompt(message, button1, button2);
 
         UserHook.markAsRated();
+    }
+
+    public static void displayStaticPage(String slug, String title) {
+
+        UHPage page = new UHPage();
+        page.setSlug(slug);
+        page.setName(title);
+
+        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
+        intent.putExtra(UHHostedPageActivity.TYPE_PAGE, page);
+        activityLifecycle.getCurrentActivity().startActivity(intent);
+
     }
 
     public interface UHPayloadListener {
