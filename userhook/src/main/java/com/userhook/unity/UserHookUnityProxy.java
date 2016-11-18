@@ -9,6 +9,7 @@
 package com.userhook.unity;
 
 import android.app.Activity;
+import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -34,7 +35,9 @@ import java.util.Map;
 
 public class UserHookUnityProxy {
 
-    public static void init() {
+    public static void initialize(Application application, String userHookAppId, String userHookApiKey, boolean fetchHookpointsOnSessionStart) {
+
+        UserHook.initialize(application, userHookAppId, userHookApiKey, fetchHookpointsOnSessionStart);
 
         UserHook.setPayloadListener(new UserHook.UHPayloadListener() {
             @Override
@@ -56,6 +59,13 @@ public class UserHookUnityProxy {
                 }
 
                 UnityPlayer.UnitySendMessage("UserHook","handlePayload", payloadJsonString);
+            }
+        });
+
+        UserHook.setFeedbackListener(new UserHook.UHFeedbackListener() {
+            @Override
+            public void onNewFeedback(Activity activity) {
+                UnityPlayer.UnitySendMessage("UserHook","showNewFeedback","");
             }
         });
 

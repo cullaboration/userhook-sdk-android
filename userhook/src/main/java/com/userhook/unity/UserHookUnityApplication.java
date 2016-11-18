@@ -34,7 +34,7 @@ public class UserHookUnityApplication extends Application {
             String appKey = bundle.getString("userhookAppKey", "");
 
             if (!appId.isEmpty() && !appKey.isEmpty()) {
-                UserHook.initialize(this, appId, appKey, false);
+                UserHookUnityProxy.initialize(this, appId, appKey, false);
             }
             else {
                 Log.e("uh","app id and app key must not be null");
