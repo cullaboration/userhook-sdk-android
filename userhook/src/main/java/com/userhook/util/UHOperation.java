@@ -144,6 +144,11 @@ public class UHOperation {
 
                 try {
 
+                    if (string == null || string.isEmpty()) {
+                        Log.e(UserHook.TAG,"fetch page names server response was null");
+                        return;
+                    }
+
                     JSONObject json = new JSONObject(string);
 
                     if (json != null && json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
@@ -187,7 +192,8 @@ public class UHOperation {
             @Override
             public void onSuccess(String string) {
 
-                if (string == null) {
+                if (string == null || string.isEmpty()) {
+                    Log.e(UserHook.TAG,"fetch message templates server response was null");
                     return;
                 }
 
@@ -248,6 +254,11 @@ public class UHOperation {
             public void onSuccess(String result) {
 
                 fetchingHookpoints = false;
+
+                if (result == null || result.isEmpty()) {
+                    Log.e(UserHook.TAG,"fetch hook points server response was null");
+                    return;
+                }
 
                 try {
 
@@ -312,11 +323,16 @@ public class UHOperation {
 
                 try {
 
+                    if (result == null || result.isEmpty()) {
+                        Log.e(UserHook.TAG,"track hook point action server response was null");
+                        return;
+                    }
+
                     JSONObject json = new JSONObject(result);
 
                     if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
 
-                        Log.i("uh", "hookpoint tracked: " + action);
+                        Log.i(UserHook.TAG, "hookpoint tracked: " + action);
 
 
                     } else {
@@ -381,7 +397,7 @@ public class UHOperation {
             public void onSuccess(String result) {
 
                 if (result == null) {
-                    Log.e("uh", "error registering push token, response was null");
+                    Log.e(UserHook.TAG, "error registering push token, response was null");
                     return;
                 }
 
@@ -392,15 +408,15 @@ public class UHOperation {
                     if (json.has("status") && json.getString("status").equalsIgnoreCase("success")
                             && json.getJSONObject("data") != null && json.getJSONObject("data").getBoolean("registered")) {
 
-                        Log.i("uh", "push token registered");
+                        Log.i(UserHook.TAG, "push token registered");
 
                     } else {
-                        Log.e("uh", "userhook response status was error for register push token");
+                        Log.e(UserHook.TAG, "userhook response status was error for register push token");
 
                     }
 
                 } catch (Exception e) {
-                    Log.e("uh", "error registering push token", e);
+                    Log.e(UserHook.TAG, "error registering push token", e);
 
                 }
 
@@ -436,20 +452,25 @@ public class UHOperation {
 
                 try {
 
+                    if (result == null || result.isEmpty()) {
+                        Log.e(UserHook.TAG,"track push open server response was null");
+                        return;
+                    }
+
                     JSONObject json = new JSONObject(result);
 
                     if (json.has("status") && json.getString("status").equalsIgnoreCase("success")
                             && json.getJSONObject("data") != null && json.getJSONObject("data").getBoolean("tracked")) {
 
-                        Log.i("uh", "push open tracked");
+                        Log.i(UserHook.TAG, "push open tracked");
 
                     } else {
-                        Log.e("uh", "user hook response status was error for track push open");
+                        Log.e(UserHook.TAG, "user hook response status was error for track push open");
 
                     }
 
                 } catch (Exception e) {
-                    Log.e("uh", "error tracking push open", e);
+                    Log.e(UserHook.TAG, "error tracking push open", e);
 
                 }
 
