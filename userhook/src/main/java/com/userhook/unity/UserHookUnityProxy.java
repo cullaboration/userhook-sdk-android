@@ -277,6 +277,19 @@ public class UserHookUnityProxy {
         }
     }
 
+    public static void setPushNotificationIcon(String name) {
+        try {
+            int iconId = UserHook.getResourceId(name, "drawable");
+
+            if (iconId > 0) {
+                UserHook.setPushNotificationIcon(iconId);
+            }
+
+        }
+        catch (Exception e) {
+            Log.e(UserHook.TAG, "error setting custom push notification icon");
+        }
+    }
 
     protected static Map<String,String> toMap(JSONObject object) throws JSONException{
 
