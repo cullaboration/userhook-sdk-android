@@ -15,3 +15,4 @@
 - Restructured project folders
 - Convert push from GCM to Firebase
 - Added gradle compile support
+
