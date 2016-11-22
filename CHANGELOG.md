@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.4 (2016-11-22)
+- Make background of message webviews be transparent
+- Added convenience method for displayStaticPage
+
 ## v1.2.3 (2016-09-23)
 - Added jitpack.yml config file
 
