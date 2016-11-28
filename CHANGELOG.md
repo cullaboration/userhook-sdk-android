@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.2.5 (2016-11-28(
+- Update Firebase versions
+
 ## v1.2.4 (2016-11-22)
 - Make background of message webviews be transparent
 - Added convenience method for displayStaticPage
