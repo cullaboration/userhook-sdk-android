@@ -29,13 +29,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.userhook.UserHook;
 import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHMessageMetaButton;
-import com.userhook.view.UHHostedPageActivity;
-import com.userhook.util.UHOperation;
 import com.userhook.model.UHPage;
+import com.userhook.util.UHOperation;
 import com.userhook.util.UHUser;
-import com.userhook.UserHook;
 
 import org.xml.sax.XMLReader;
 
@@ -101,6 +100,7 @@ public class MainActivity extends AppCompatActivity
 
         staticPages = new HashMap<>();
         loadStaticPages();
+
     }
 
     /*
