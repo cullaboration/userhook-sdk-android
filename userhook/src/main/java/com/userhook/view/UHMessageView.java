@@ -331,7 +331,7 @@ public class UHMessageView extends RelativeLayout {
         layoutParams.addRule(CENTER_IN_PARENT);
         addView(webView, layoutParams);
 
-        webView.loadData(html, "text/html", "utf-8");
+        webView.loadData(html, "text/html; charset=UTF-8", null);
         contentView = webView;
 
         contentLoaded = true;
