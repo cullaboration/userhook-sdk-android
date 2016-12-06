@@ -70,6 +70,12 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
                 UserHook.handlePushPayload(activity, payload);
             }
 
+            // handle new feedback if needed
+            if (intent.hasExtra(UserHook.UH_PUSH_FEEDBACK)) {
+                UserHook.setHasNewFeedback(true);
+                intent.removeExtra(UserHook.UH_PUSH_FEEDBACK);
+            }
+
             // track open
             UserHook.trackPushOpen((Map<String,String>)intent.getSerializableExtra(UserHook.UH_PUSH_DATA));
             intent.removeExtra(UserHook.UH_PUSH_TRACKED);
@@ -137,6 +143,15 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
         }
 
 
+    }
+
+    /**
+     * is the app in the foreground
+     *
+     * @return
+     */
+    public boolean isForeground() {
+        return activeActivities > 0;
     }
 
     public Activity getCurrentActivity() {

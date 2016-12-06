@@ -60,7 +60,7 @@ public class MainApplication extends Application {
 
                     if (activity != null) {
 
-                        UserHook.showFeedbackPrompt("You have a new response to your recently submitted feedback. Do you want to read it now?", "Later", "Read Now");
+                        UserHook.showFeedbackPrompt("You have a new response to your recently submitted feedback. Do you want to read it now?", "Read Now", "Later");
 
                     }
                 }
