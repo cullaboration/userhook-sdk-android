@@ -59,7 +59,7 @@ public class UserHook {
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.2.6";
+    public static final String UH_SDK_VERSION = "1.2.7";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
@@ -420,7 +420,7 @@ public class UserHook {
 
     public static void displayPrompt(String message, UHMessageMetaButton button1, UHMessageMetaButton button2) {
 
-        UHMessageMeta meta = new UHMessageMeta();
+        final UHMessageMeta meta = new UHMessageMeta();
         meta.setBody(message);
 
         if (button1 != null && button2 != null) {
@@ -437,11 +437,19 @@ public class UserHook {
         meta.setButton2(button2);
 
         // add view to screen
-        UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
-        if (UHMessageView.canDisplay()) {
-            ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
-            rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            view.showDialog();
+         if (UHMessageView.canDisplay() && activityLifecycle.getCurrentActivity() != null) {
+
+            activityLifecycle.getCurrentActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
+
+                    ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
+                    rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    view.showDialog();
+                }
+            });
+
         }
     }
 
