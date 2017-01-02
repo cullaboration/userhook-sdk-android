@@ -11,6 +11,7 @@ package com.cullaboration.userhookdemo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -41,6 +42,7 @@ import org.xml.sax.XMLReader;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
@@ -101,6 +103,10 @@ public class MainActivity extends AppCompatActivity
 
         staticPages = new HashMap<>();
         loadStaticPages();
+
+
+
+
     }
 
     /*

@@ -90,12 +90,12 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
             activeActivities = 0;
         }
 
-        // if only one activity is started, then this means the app is just came to the foreground
+        // if only one activity is started, then this means the app just came to the foreground
         if (activeActivities == 1) {
             // session started
 
             sessionStartTime = System.currentTimeMillis();
-            Log.i("userhook","session started");
+            Log.i(UserHook.TAG,"session started");
 
             if ((System.currentTimeMillis() - backgroundTime) / 1000 > UH_TIME_BETWEEN_SESSIONS_IN_SECONDS) {
                 // mark this as a new session
@@ -119,7 +119,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
             long sessionLength = (System.currentTimeMillis() - sessionStartTime) / 1000;
 
-            Log.i("userhook","session stopped: " + sessionLength);
+            Log.i(UserHook.TAG,"session stopped: " + sessionLength);
             if (sessionLength > 0) {
                 // send session data to server
                 Map<String, Object> data = new HashMap<String,Object>();
