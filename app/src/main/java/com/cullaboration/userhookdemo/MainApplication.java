@@ -68,6 +68,9 @@ public class MainApplication extends Application {
             }
         });
 
+        // set custom notification icon
+        UserHook.setPushNotificationIcon(R.drawable.notification);
+
         UserHook.setPushMessageListener(new UserHook.UHPushMessageListener() {
             @Override
             public Intent onPushMessage(Map<String, Object> payload) {
