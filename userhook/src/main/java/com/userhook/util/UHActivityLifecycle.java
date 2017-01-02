@@ -101,7 +101,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
             // session started
 
             sessionStartTime = System.currentTimeMillis();
-            Log.i("userhook","session started");
+            Log.i(UserHook.TAG,"session started");
 
             if ((System.currentTimeMillis() - backgroundTime) / 1000 > UH_TIME_BETWEEN_SESSIONS_IN_SECONDS) {
                 // mark this as a new session
@@ -125,7 +125,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
             long sessionLength = (System.currentTimeMillis() - sessionStartTime) / 1000;
 
-            Log.i("userhook","session stopped: " + sessionLength);
+            Log.i(UserHook.TAG,"session stopped: " + sessionLength);
             if (sessionLength > 0) {
                 // send session data to server
                 Map<String, Object> data = new HashMap<String,Object>();
@@ -148,7 +148,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
     /**
      * is the app in the foreground
      *
-     * @return
+     * @return if app is currently in the foreground
      */
     public boolean isForeground() {
         return activeActivities > 0;
@@ -158,7 +158,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
         return currentActivity;
     }
 
-    public void createSession(final Activity activity) {
+    private void createSession(final Activity activity) {
         UHOperation operation = new UHOperation();
 
         if (fetchHookpointsOnSessionStart) {
@@ -176,7 +176,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
                         @Override
                         public void onError() {
-                            Log.e("uh","error fetching hookpoints");
+                            Log.e(UserHook.TAG,"error fetching hookpoints");
                         }
                     });
                 }

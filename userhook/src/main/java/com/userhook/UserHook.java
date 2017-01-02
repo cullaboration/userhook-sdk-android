@@ -44,22 +44,22 @@ public class UserHook {
 
     public static final String TAG = "uh";
 
-    static Context applicationContext;
-    static String appId;
-    static String apiKey;
+    private static Context applicationContext;
+    private static String appId;
+    private static String apiKey;
 
-    static boolean hasNewFeedback = false;
-    protected static UHFeedbackListener feedbackListener;
-    protected static UHPushMessageListener pushMessageListener;
+    private static boolean hasNewFeedback = false;
+    private static UHFeedbackListener feedbackListener;
+    private  static UHPushMessageListener pushMessageListener;
 
-    static UHActivityLifecycle activityLifecycle;
+    private static UHActivityLifecycle activityLifecycle;
 
     public static final String UH_API_URL = "https://api.userhook.com";
     public static final String UH_HOST_URL = "https://formhost.userhook.com";
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.2.7";
+    public static final String UH_SDK_VERSION = "1.3.1";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
@@ -72,13 +72,10 @@ public class UserHook {
     private static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
     private static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
 
-    protected static UHPayloadListener payloadListener;
+    private static UHPayloadListener payloadListener;
 
     // resource id of icon to use for push notification
-    protected static int pushNotificationIcon;
-
-
-    protected static int customPromptLayout = 0;
+    private static int pushNotificationIcon;
 
     // user to determine if push message is from User Hook
     private static final String PUSH_SOURCE_PARAM = "source";
@@ -148,14 +145,6 @@ public class UserHook {
 
     public static Context getApplicationContext() {
         return applicationContext;
-    }
-
-    public static int getCustomPromptLayout() {
-        return customPromptLayout;
-    }
-
-    public static void setCustomPromptLayout(int customPromptLayoutId) {
-        customPromptLayout = customPromptLayoutId;
     }
 
     public static void setPushNotificationIcon(int pushNotificationIconId) {
@@ -285,7 +274,7 @@ public class UserHook {
 
             }
             catch (JSONException e) {
-                Log.e("uh","error parsing push notification payload");
+                Log.e(UserHook.TAG,"error parsing push notification payload");
             }
         }
 
@@ -344,7 +333,7 @@ public class UserHook {
             return notificationBuilder.build();
 
         } catch (Exception e) {
-            Log.e("uh", "error create push notification", e);
+            Log.e(UserHook.TAG, "error create push notification", e);
             return null;
         }
 

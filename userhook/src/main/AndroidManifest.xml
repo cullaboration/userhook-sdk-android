@@ -3,6 +3,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- used to allow users to upload images (ex. screenshots) from their device -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application>
 
 

@@ -7,7 +7,6 @@
  */
 package com.userhook.util;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -36,6 +35,9 @@ public class UHOperation {
     public static final String UH_APP_KEY_HEADER_NAME = "X-USERHOOK-APP-KEY";
     public static final String UH_USER_ID_HEADER_NAME = "X-USERHOOK-USER-ID";
     public static final String UH_USER_KEY_HEADER_NAME = "X-USERHOOK-USER-KEY";
+    public static final String UH_SDK_HEADER_NAME = "X-USERHOOK-SDK";
+
+    public static final String UH_SDK_HEADER_PREFIX = "android-";
 
 
     private static final String UH_PATH_SESSION = "/session";
@@ -97,7 +99,7 @@ public class UHOperation {
 
                     JSONObject json = new JSONObject(string);
 
-                    if (json != null && json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
 
                         JSONObject data = json.getJSONObject("data");
 
@@ -152,7 +154,7 @@ public class UHOperation {
 
                     JSONObject json = new JSONObject(string);
 
-                    if (json != null && json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
 
                         JSONArray data = json.getJSONArray("data");
 
@@ -202,7 +204,7 @@ public class UHOperation {
 
                     JSONObject json = new JSONObject(string);
 
-                    if (json != null && json.has("templates")) {
+                    if (json.has("templates")) {
 
                         JSONObject data = json.getJSONObject("templates");
 
@@ -265,7 +267,7 @@ public class UHOperation {
 
                     JSONObject json = new JSONObject(result);
 
-                    if (json != null && json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
 
                         JSONObject data = json.getJSONObject("data");
 

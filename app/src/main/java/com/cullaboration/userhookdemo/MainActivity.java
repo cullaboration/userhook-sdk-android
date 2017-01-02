@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /*
-    If your activity uses launchMode="singleTop", you will need to override the onNewIntent
+    You will need to override the onNewIntent
     with the code below to properly track push notifications opens
      */
     @Override
