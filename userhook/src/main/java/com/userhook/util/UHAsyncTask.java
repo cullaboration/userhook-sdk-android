@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 - present, Cullaboration Media, LLC.
  * All rights reserved.
- *
+ * <p>
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -13,9 +13,13 @@ import android.util.Log;
 import com.userhook.UserHook;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -24,11 +28,31 @@ import java.util.Map;
 
 public class UHAsyncTask extends AsyncTask<String, Void, String> {
 
+    public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
+
     protected String queryString;
 
     protected UHAsyncTaskListener listener;
-    protected String method = "GET";
+    protected String method = METHOD_GET;
 
+    protected byte[] attachment;
+    protected String attachmentFileExtension;
+    protected String attachmentFieldName;
+    protected String attachmentMimeType;
+
+    protected Map<String, Object> params;
+
+    public UHAsyncTask(Map<String, Object> params, byte[] attachment, String attachmentFieldName, String attachmentFileExtension, String attachmentMimeType, UHAsyncTaskListener listener) {
+
+        this.params = params;
+        this.listener = listener;
+        this.method = METHOD_POST;
+        this.attachment = attachment;
+        this.attachmentFieldName = attachmentFieldName;
+        this.attachmentFileExtension = attachmentFileExtension;
+        this.attachmentMimeType = attachmentMimeType;
+    }
 
 
     public UHAsyncTask(Map<String, Object> params, UHAsyncTaskListener listener) {
@@ -51,7 +75,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
                 finalUrl = urls[0];
             }
 
-            if (method.equalsIgnoreCase("GET") && queryString != null) {
+            if (method.equals(METHOD_GET) && queryString != null) {
                 finalUrl += "?" + queryString;
             }
 
@@ -61,6 +85,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
             conn.setRequestMethod(method);
             conn.setRequestProperty(UHOperation.UH_APP_ID_HEADER_NAME, UserHook.getAppId());
             conn.setRequestProperty(UHOperation.UH_APP_KEY_HEADER_NAME, UserHook.getApiKey());
+            conn.setRequestProperty(UHOperation.UH_SDK_HEADER_NAME, UHOperation.UH_SDK_HEADER_PREFIX + UserHook.UH_SDK_VERSION);
 
             // add user header values if available
             if (UHUser.getUserId() != null) {
@@ -70,17 +95,43 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
                 conn.setRequestProperty(UHOperation.UH_USER_KEY_HEADER_NAME, UHUser.getUserKey());
             }
 
+            if (method.equalsIgnoreCase(METHOD_POST) && attachment != null) {
 
-            if (method.equalsIgnoreCase("POST") && queryString != null) {
+                // do file upload
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+
+                String boundary = "****UserHook" + System.currentTimeMillis()+"****";
+
+                conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+
+                DataOutputStream writer = new DataOutputStream(conn.getOutputStream());
+
+                // add form parameters
+                if (params != null) {
+                    for (String name : params.keySet()) {
+                        addMultipartField(writer, name, (String) params.get(name), boundary);
+                    }
+                }
+
+                // add attachment
+                addMultipartFile(writer, boundary);
+                writer.writeBytes("--" + boundary + "--\r\n");
+
+
+                writer.flush();
+                writer.close();
+
+
+            } else if (method.equalsIgnoreCase(METHOD_POST) && queryString != null) {
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                conn.setRequestProperty("Content-Length", "" + Integer.toString(queryString.getBytes().length));
+                conn.setRequestProperty("Content-Length", Integer.toString(queryString.getBytes().length));
 
                 byte[] outputInBytes = queryString.getBytes("utf-8");
                 OutputStream os = conn.getOutputStream();
                 os.write(outputInBytes);
                 os.close();
             }
-
 
 
             InputStream is = conn.getInputStream();
@@ -91,6 +142,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
             while ((inputStr = streamReader.readLine()) != null)
                 responseStrBuilder.append(inputStr);
 
+            conn.disconnect();
 
             return responseStrBuilder.toString();
 
@@ -100,6 +152,50 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
         }
 
     }
+
+
+    /**
+     * add form field value to multipart request
+     *
+     * @param writer
+     * @param name
+     * @param value
+     * @param boundary
+     * @throws Exception
+     */
+    protected void addMultipartField(DataOutputStream writer, String name, String value, String boundary) throws Exception {
+
+        writer.writeBytes("--" + boundary+"\r\n");
+        writer.writeBytes("Content-Disposition: form-data; name=\"" + name + "\"");
+        writer.writeBytes("\r\n");
+        writer.writeBytes("\r\n");
+        writer.writeBytes(value);
+        writer.writeBytes("\r\n");
+        writer.flush();
+
+    }
+
+    /**
+     * add file to multipart requeset
+     *
+     * @param writer
+     * @param boundary
+     * @throws Exception
+     */
+    protected void addMultipartFile(DataOutputStream writer, String boundary) throws Exception {
+
+        writer.writeBytes("--" + boundary+"\r\n");
+        writer.writeBytes("Content-Disposition: form-data; name=\"" + attachmentFieldName + "\";filename=\"" + attachmentFieldName+"." + attachmentFileExtension+"\"");
+        writer.writeBytes("\r\n");
+        writer.writeBytes("Content-Type: " + attachmentMimeType);
+        writer.writeBytes("\r\n");
+        writer.writeBytes("\r\n");
+        writer.write(attachment);
+        writer.writeBytes("\r\n");
+        writer.flush();
+
+    }
+
 
     public static String getDataFromParams(Map<String, Object> params) {
         String str = "";
@@ -118,11 +214,10 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
                 String encodedKey = URLEncoder.encode(key, "utf-8");
                 String encodedValue = URLEncoder.encode(params.get(key).toString(), "utf-8");
 
-                str += encodedKey+"="+encodedValue;
+                str += encodedKey + "=" + encodedValue;
             }
-        }
-        catch (Exception e) {
-            Log.e(UserHook.TAG,"error prepping data for request", e);
+        } catch (Exception e) {
+            Log.e(UserHook.TAG, "error prepping data for request", e);
         }
 
         return str;
@@ -133,7 +228,7 @@ public class UHAsyncTask extends AsyncTask<String, Void, String> {
 
         if (listener != null) {
 
-                listener.onSuccess(result);
+            listener.onSuccess(result);
         }
 
     }

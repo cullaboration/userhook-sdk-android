@@ -8,6 +8,7 @@
 
 package com.userhook.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -59,6 +60,12 @@ public class UHMessageView extends RelativeLayout {
     protected int dialogWidth = 280; // in dp
 
     public static final String UH_MESSAGE_PATH = "/message";
+
+    /*
+    flag used to track if a message view is currently being displayed,
+    this way only one message view can be displayed at a time
+     */
+    protected static boolean displaying;
 
     public UHMessageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -124,6 +131,12 @@ public class UHMessageView extends RelativeLayout {
 
     public void showDialog() {
 
+        if (!canDisplay()) {
+            return;
+        }
+
+        displaying = true;
+
         if (contentLoaded) {
 
             int overlayInId = UserHook.getResourceId("uh_overlay_in", "anim");
@@ -141,6 +154,7 @@ public class UHMessageView extends RelativeLayout {
 
     public void hideDialog() {
 
+        displaying = false;
 
         int overlayOutId = UserHook.getResourceId("uh_overlay_out", "anim");
         int dialogOutId = UserHook.getResourceId("uh_dialog_out", "anim");
@@ -315,7 +329,12 @@ public class UHMessageView extends RelativeLayout {
 
     protected void loadWebViewContent(String html) {
 
-        WebView webView = new WebView(getContext());
+        Activity activity = UserHook.getActivityLifecycle().getCurrentActivity();
+        if (activity == null) {
+            return;
+        }
+
+        WebView webView = new WebView(activity);
         webView.setWebViewClient(new MessageWebViewClient());
         webView.getSettings().setJavaScriptEnabled(true);
 
@@ -331,13 +350,16 @@ public class UHMessageView extends RelativeLayout {
         layoutParams.addRule(CENTER_IN_PARENT);
         addView(webView, layoutParams);
 
-        webView.loadData(html, "text/html", "utf-8");
+        webView.loadData(html, "text/html; charset=UTF-8", null);
         contentView = webView;
 
         contentLoaded = true;
     }
 
     protected void clickedButton(UHMessageMetaButton button) {
+
+        // hide the view first so the displaying flag will be cleared
+        hideDialog();
 
         if (button == null) {
             return;
@@ -371,13 +393,15 @@ public class UHMessageView extends RelativeLayout {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(button.getUri()));
                 UserHook.getActivityLifecycle().getCurrentActivity().startActivity(intent);
             }
+        } else if (button.getClick().equals(UHMessageMeta.CLICK_CLOSE)) {
+            // don't track close as an interaction
+            return;
         }
 
         if (hookpoint != null) {
             UserHook.trackHookPointInteraction(hookpoint);
         }
 
-        hideDialog();
 
     }
 
@@ -409,6 +433,19 @@ public class UHMessageView extends RelativeLayout {
 
             return false;
         }
+    }
+
+    /**
+     * reset the displaying flag when this is view removed from the window
+     */
+    protected void onDetachFromWindow() {
+        super.onDetachedFromWindow();
+
+        displaying = false;
+    }
+
+    public static boolean canDisplay() {
+        return !displaying;
     }
 
 }

@@ -44,40 +44,38 @@ public class UserHook {
 
     public static final String TAG = "uh";
 
-    static Context applicationContext;
-    static String appId;
-    static String apiKey;
+    private static Context applicationContext;
+    private static String appId;
+    private static String apiKey;
 
-    static boolean hasNewFeedback = false;
-    protected static UHFeedbackListener feedbackListener;
-    protected static UHPushMessageListener pushMessageListener;
+    private static boolean hasNewFeedback = false;
+    private static UHFeedbackListener feedbackListener;
+    private  static UHPushMessageListener pushMessageListener;
 
-    static UHActivityLifecycle activityLifecycle;
+    private static UHActivityLifecycle activityLifecycle;
 
     public static final String UH_API_URL = "https://api.userhook.com";
     public static final String UH_HOST_URL = "https://formhost.userhook.com";
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.2.2";
+    public static final String UH_SDK_VERSION = "1.3.1";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
     public static final String UH_PUSH_DATA = "uh_push_data";
     public static final String UH_PUSH_PAYLOAD = "uh_push_payload";
     public static final String UH_PUSH_TRACKED = "uh_push_tracked";
+    public static final String UH_PUSH_FEEDBACK = "uh_push_feedback";
 
 
     private static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
     private static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
 
-    protected static UHPayloadListener payloadListener;
+    private static UHPayloadListener payloadListener;
 
     // resource id of icon to use for push notification
-    protected static int pushNotificationIcon;
-
-
-    protected static int customPromptLayout = 0;
+    private static int pushNotificationIcon;
 
     // user to determine if push message is from User Hook
     private static final String PUSH_SOURCE_PARAM = "source";
@@ -149,14 +147,6 @@ public class UserHook {
         return applicationContext;
     }
 
-    public static int getCustomPromptLayout() {
-        return customPromptLayout;
-    }
-
-    public static void setCustomPromptLayout(int customPromptLayoutId) {
-        customPromptLayout = customPromptLayoutId;
-    }
-
     public static void setPushNotificationIcon(int pushNotificationIconId) {
         pushNotificationIcon = pushNotificationIconId;
     }
@@ -171,7 +161,8 @@ public class UserHook {
 
     public static void setHasNewFeedback(boolean value) {
         hasNewFeedback = value;
-        if (value && feedbackListener != null) {
+
+        if (value && feedbackListener != null && activityLifecycle.isForeground()) {
             feedbackListener.onNewFeedback(activityLifecycle.getCurrentActivity());
         }
     }
@@ -264,6 +255,8 @@ public class UserHook {
         }
 
 
+        boolean hasNewFeedback = false;
+
         Map<String, Object> payload = new HashMap<>();
         if (data.containsKey("payload")) {
             try {
@@ -273,6 +266,7 @@ public class UserHook {
                 // check if this is a feedback reply
                 if (json.has("new_feedback") && json.getBoolean("new_feedback")) {
                     UserHook.setHasNewFeedback(true);
+                    hasNewFeedback = true;
                 } else {
                     UserHook.setHasNewFeedback(false);
                 }
@@ -280,7 +274,7 @@ public class UserHook {
 
             }
             catch (JSONException e) {
-                Log.e("uh","error parsing push notification payload");
+                Log.e(UserHook.TAG,"error parsing push notification payload");
             }
         }
 
@@ -307,9 +301,11 @@ public class UserHook {
 
         intent.putExtra(UserHook.UH_PUSH_DATA, (Serializable)data);
         intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
+        intent.putExtra(UserHook.UH_PUSH_FEEDBACK, hasNewFeedback);
         if (payload.size() > 0) {
             intent.putExtra(UserHook.UH_PUSH_PAYLOAD, data.get("payload"));
         }
+
 
 
         //PendingIntent.FLAG_UPDATE_CURRENT is required to pass along our Intent Extras
@@ -337,7 +333,7 @@ public class UserHook {
             return notificationBuilder.build();
 
         } catch (Exception e) {
-            Log.e("uh", "error create push notification", e);
+            Log.e(UserHook.TAG, "error create push notification", e);
             return null;
         }
 
@@ -413,7 +409,7 @@ public class UserHook {
 
     public static void displayPrompt(String message, UHMessageMetaButton button1, UHMessageMetaButton button2) {
 
-        UHMessageMeta meta = new UHMessageMeta();
+        final UHMessageMeta meta = new UHMessageMeta();
         meta.setBody(message);
 
         if (button1 != null && button2 != null) {
@@ -430,11 +426,20 @@ public class UserHook {
         meta.setButton2(button2);
 
         // add view to screen
-        UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
-        ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
-        rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+         if (UHMessageView.canDisplay() && activityLifecycle.getCurrentActivity() != null) {
 
-        view.showDialog();
+            activityLifecycle.getCurrentActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
+
+                    ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
+                    rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    view.showDialog();
+                }
+            });
+
+        }
     }
 
     public static void showRatingPrompt(String message, String postiveButtonTitle, String negativeButtonTitle) {

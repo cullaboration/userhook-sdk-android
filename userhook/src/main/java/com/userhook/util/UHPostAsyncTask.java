@@ -14,11 +14,11 @@ public class UHPostAsyncTask extends UHAsyncTask {
 
     public UHPostAsyncTask(Map<String, Object> params, UHAsyncTaskListener listener) {
         super(params, listener);
-        this.method = "POST";
+        this.method = UHAsyncTask.METHOD_POST;
     }
 
     public UHPostAsyncTask(String queryString, UHAsyncTaskListener listener) {
         super(queryString, listener);
-        this.method = "POST";
+        this.method = UHAsyncTask.METHOD_POST;
     }
 }

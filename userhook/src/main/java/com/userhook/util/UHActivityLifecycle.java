@@ -70,6 +70,12 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
                 UserHook.handlePushPayload(activity, payload);
             }
 
+            // handle new feedback if needed
+            if (intent.hasExtra(UserHook.UH_PUSH_FEEDBACK)) {
+                UserHook.setHasNewFeedback(true);
+                intent.removeExtra(UserHook.UH_PUSH_FEEDBACK);
+            }
+
             // track open
             UserHook.trackPushOpen((Map<String,String>)intent.getSerializableExtra(UserHook.UH_PUSH_DATA));
             intent.removeExtra(UserHook.UH_PUSH_TRACKED);
@@ -139,11 +145,20 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
     }
 
+    /**
+     * is the app in the foreground
+     *
+     * @return if app is currently in the foreground
+     */
+    public boolean isForeground() {
+        return activeActivities > 0;
+    }
+
     public Activity getCurrentActivity() {
         return currentActivity;
     }
 
-    public void createSession(final Activity activity) {
+    private void createSession(final Activity activity) {
         UHOperation operation = new UHOperation();
 
         if (fetchHookpointsOnSessionStart) {
@@ -161,7 +176,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
                         @Override
                         public void onError() {
-                            Log.e("uh","error fetching hookpoints");
+                            Log.e(UserHook.TAG,"error fetching hookpoints");
                         }
                     });
                 }

@@ -51,20 +51,22 @@ public class UHHookPointMessage extends UHHookPoint {
 
         final UHMessageView messageView = new UHMessageView(activity, this);
 
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        if (UHMessageView.canDisplay()) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
 
-                // check for current activity so we have the top most activity in case another activity
-                // has started since the hook points were loaded
-                Activity currentActivity = UserHook.getActivityLifecycle().getCurrentActivity();
-                ViewGroup rootView = (ViewGroup) currentActivity.findViewById(android.R.id.content);
-                rootView.addView(messageView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                messageView.showDialog();
+                    // check for current activity so we have the top most activity in case another activity
+                    // has started since the hook points were loaded
+                    Activity currentActivity = UserHook.getActivityLifecycle().getCurrentActivity();
+                    ViewGroup rootView = (ViewGroup) currentActivity.findViewById(android.R.id.content);
+                    rootView.addView(messageView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    messageView.showDialog();
 
-                UserHook.trackHookPointDisplay(hookPoint);
-            }
-        });
+                    UserHook.trackHookPointDisplay(hookPoint);
+                }
+            });
+        }
 
     }
 }
