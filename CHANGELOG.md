@@ -1,5 +1,9 @@
 # Changelog
 
+## v.2.0.0. (2017-03-27)
+- Added events to hook points
+- Added Net Promoter Score prompts
+
 ## v.1.3.1 (2017-01-02)
 - Added file uploads to feedback form
 
