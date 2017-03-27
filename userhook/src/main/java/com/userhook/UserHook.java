@@ -28,8 +28,13 @@ import com.userhook.model.UHMessageMeta;
 import com.userhook.model.UHMessageMetaButton;
 import com.userhook.model.UHPage;
 import com.userhook.util.UHActivityLifecycle;
+import com.userhook.util.UHDeviceInfo;
+import com.userhook.util.UHDeviceInfoProvider;
+import com.userhook.util.UHInternal;
 import com.userhook.util.UHJsonUtils;
 import com.userhook.util.UHOperation;
+import com.userhook.util.UHUser;
+import com.userhook.util.UHUserProvider;
 import com.userhook.view.UHHostedPageActivity;
 import com.userhook.view.UHMessageView;
 
@@ -44,22 +49,12 @@ public class UserHook {
 
     public static final String TAG = "uh";
 
-    private static Context applicationContext;
-    private static String appId;
-    private static String apiKey;
-
-    private static boolean hasNewFeedback = false;
-    private static UHFeedbackListener feedbackListener;
-    private  static UHPushMessageListener pushMessageListener;
-
-    private static UHActivityLifecycle activityLifecycle;
-
     public static final String UH_API_URL = "https://api.userhook.com";
     public static final String UH_HOST_URL = "https://formhost.userhook.com";
 
     public static final String UH_URL_SCHEMA = "uh://";
     public static final int UH_API_VERSION = 1;
-    public static final String UH_SDK_VERSION = "1.3.1";
+    public static final String UH_SDK_VERSION = "2.0.0";
 
     public static final String UH_CUSTOM_FIELDS = "customFields";
 
@@ -69,152 +64,97 @@ public class UserHook {
     public static final String UH_PUSH_FEEDBACK = "uh_push_feedback";
 
 
-    private static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
-    private static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
-
-    private static UHPayloadListener payloadListener;
-
-    // resource id of icon to use for push notification
-    private static int pushNotificationIcon;
+    public static final String UH_HOOK_POINT_DISPLAY_ACTION = "display";
+    public static final String UH_HOOK_POINT_INTERACT_ACTION = "interact";
 
     // user to determine if push message is from User Hook
-    private static final String PUSH_SOURCE_PARAM = "source";
-    private static final String PUSH_SOURCE_VALUE = "userhook";
+    public static final String PUSH_SOURCE_PARAM = "source";
+    public static final String PUSH_SOURCE_VALUE = "userhook";
 
 
-    // application settings for feedback page
-    private static String feedbackScreenTitle = "Feedback";
-    private static Map<String,String> feedbackCustomFields;
+    // default width of pop-up message views
+    public static int dialogWidth = 300; // in dp
+
+
 
     public static void initialize(Application application, String userHookAppId, String userHookApiKey, boolean fetchHookpointsOnSessionStart) {
 
-        applicationContext = application;
-        appId = userHookAppId;
-        apiKey = userHookApiKey;
-
-        // add the activity lifecycle listener
-        activityLifecycle = new UHActivityLifecycle(fetchHookpointsOnSessionStart);
-        application.registerActivityLifecycleCallbacks(activityLifecycle);
-
-        Log.d(TAG, "user hook initialized for app: " + userHookApiKey);
+        UHInternal.getInstance().initialize(application, userHookAppId, userHookApiKey, fetchHookpointsOnSessionStart);
 
     }
-
 
     public static void setPayloadListener(UHPayloadListener listener) {
-        payloadListener = listener;
+        UHInternal.getInstance().setPayloadListener(listener);
     }
 
-    public static void actionReceived(Activity activity, Map<String, Object> payload) {
-        if (payloadListener != null && payload != null) {
-            payloadListener.onAction(activity, payload);
-        }
-    }
 
     public static void updateSessionData(Map<String, Object> data, UHSuccessListener listener) {
-        UHOperation operation = new UHOperation();
-        operation.updateSessionData(data, listener);
+
+        UHInternal.getInstance().updateSessionData(data, listener);
     }
 
     public static void updateCustomFields(Map<String, Object> data, UHSuccessListener listener) {
 
-        UHOperation operation = new UHOperation();
-        Map<String, Object> customFieldData = new HashMap<>();
-        for (String key : data.keySet()) {
-            customFieldData.put("custom_fields." + key, data.get(key));
-        }
-        operation.updateSessionData(customFieldData, listener);
+        UHInternal.getInstance().updateCustomFields(data, listener);
+
     }
 
     public static void updatePurchasedItem(String sku, Number price, UHSuccessListener listener) {
 
-        UHOperation operation = new UHOperation();
-        Map<String, Object> data = new HashMap<>();
-        data.put("purchases", sku);
-        data.put("purchases_amount", price);
-        operation.updateSessionData(data, listener);
+        UHInternal.getInstance().updatePurchasedItem(sku, price, listener);
+
     }
 
     public static String getAppId() {
-        return appId;
+        return UHInternal.getInstance().getAppId();
     }
 
     public static String getApiKey() {
-        return apiKey;
-    }
-
-    public static Context getApplicationContext() {
-        return applicationContext;
+        return UHInternal.getInstance().getApiKey();
     }
 
     public static void setPushNotificationIcon(int pushNotificationIconId) {
-        pushNotificationIcon = pushNotificationIconId;
+
+        UHInternal.getInstance().setPushNotificationIcon(pushNotificationIconId);
     }
 
     public static void setFeedbackListener(UHFeedbackListener listener) {
-        feedbackListener = listener;
+        UHInternal.getInstance().setFeedbackListener(listener);
     }
 
     public static boolean hasNewFeedback() {
-        return hasNewFeedback;
+        return UHInternal.getInstance().hasNewFeedback();
     }
 
     public static void setHasNewFeedback(boolean value) {
-        hasNewFeedback = value;
 
-        if (value && feedbackListener != null && activityLifecycle.isForeground()) {
-            feedbackListener.onNewFeedback(activityLifecycle.getCurrentActivity());
-        }
+        UHInternal.getInstance().setHasNewFeedback(value);
+
     }
 
-    public static void fetchHookPoint(UHHookPointFetchListener listener) {
+    public static void fetchHookPoint(String event, UHHookPointFetchListener listener) {
 
-        UHOperation operation = new UHOperation();
-        operation.fetchHookpoint(listener);
+        UHInternal.getInstance().fetchHookPoint(event, listener);
 
     }
 
     public static void fetchPageNames(UHOperation.UHArrayListener listener) {
-        UHOperation operation = new UHOperation();
-        operation.fetchPageNames(listener);
-    }
 
-    public static void trackHookPointDisplay(UHHookPoint hookPoint) {
-
-        UHOperation operation = new UHOperation();
-        operation.trackHookpointAction(hookPoint, UH_HOOK_POINT_DISPLAY_ACTION);
-    }
-
-    public static void trackHookPointInteraction(UHHookPoint hookPoint) {
-
-        UHOperation operation = new UHOperation();
-        operation.trackHookpointAction(hookPoint, UH_HOOK_POINT_INTERACT_ACTION);
+        UHInternal.getInstance().fetchPageNames(listener);
     }
 
 
     public static void markAsRated() {
         // mark that the user has "rated" this app
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("rated", true);
-        UserHook.updateSessionData(params, null);
-    }
-
-    public static void registerPushToken(String token) {
-        UHOperation operation = new UHOperation();
-        operation.registerPushToken(token, 1);
-    }
-
-    public static void trackPushOpen(Map<String,String> data) {
-        UHOperation operation = new UHOperation();
-        operation.trackPushOpen(data);
+        UHInternal.getInstance().markAsRated();
     }
 
     public static void setPushMessageListener(UHPushMessageListener listener) {
-        pushMessageListener = listener;
+        UHInternal.getInstance().setPushMessageListener(listener);
     }
 
     public static UHActivityLifecycle getActivityLifecycle() {
-        return activityLifecycle;
+        return UHInternal.getInstance().getActivityLifecycle();
     }
 
     /**
@@ -223,224 +163,51 @@ public class UserHook {
      * @param data
      * @return boolean if push message originated from User Hook
      */
-    public static boolean isPushFromUserHook(Map<String,String> data) {
+    public static boolean isPushFromUserHook(Map<String, String> data) {
         return data != null && data.containsKey(PUSH_SOURCE_PARAM) && data.get(PUSH_SOURCE_PARAM).equals(PUSH_SOURCE_VALUE);
     }
 
-    public static void handlePushPayload(Activity activity, String payloadString) {
+    public static Notification handlePushMessage(Context context, Map<String, String> data) {
 
-        try {
-            JSONObject json = new JSONObject(payloadString);
-            Map<String,Object> payload = UHJsonUtils.toMap(json);
-
-            if (payloadListener != null) {
-                payloadListener.onAction(activity, payload);
-            }
-        }
-        catch (JSONException je) {
-            Log.e(UserHook.TAG, "error handling push payload", je);
-        }
-
-    }
-
-    public static Notification handlePushMessage(Map<String,String> data) {
-
-        String message = data.get("message");
-        String title = "";
-
-        if (data.containsKey("title") && data.get("title") != null) {
-            title = data.get("title");
-        } else {
-            title = applicationContext.getApplicationInfo().loadLabel(applicationContext.getPackageManager()).toString();
-        }
-
-
-        boolean hasNewFeedback = false;
-
-        Map<String, Object> payload = new HashMap<>();
-        if (data.containsKey("payload")) {
-            try {
-                JSONObject json = new JSONObject(data.get("payload"));
-                payload = UHJsonUtils.toMap(json);
-
-                // check if this is a feedback reply
-                if (json.has("new_feedback") && json.getBoolean("new_feedback")) {
-                    UserHook.setHasNewFeedback(true);
-                    hasNewFeedback = true;
-                } else {
-                    UserHook.setHasNewFeedback(false);
-                }
-
-
-            }
-            catch (JSONException e) {
-                Log.e(UserHook.TAG,"error parsing push notification payload");
-            }
-        }
-
-
-
-        // message received
-        Intent intent;
-
-        if (pushMessageListener != null) {
-            intent = pushMessageListener.onPushMessage(payload);
-        } else {
-            // default to opening the main activity
-            intent = applicationContext.getPackageManager().getLaunchIntentForPackage(applicationContext.getPackageName());
-        }
-
-        // convert data to a try Map<String,String> since it will come in as an ArrayMap
-        if (data instanceof ArrayMap) {
-            HashMap<String,String> hashMap = new HashMap<>();
-            for (String key : data.keySet()) {
-                hashMap.put(key, data.get(key));
-            }
-            data = hashMap;
-        }
-
-        intent.putExtra(UserHook.UH_PUSH_DATA, (Serializable)data);
-        intent.putExtra(UserHook.UH_PUSH_TRACKED, false);
-        intent.putExtra(UserHook.UH_PUSH_FEEDBACK, hasNewFeedback);
-        if (payload.size() > 0) {
-            intent.putExtra(UserHook.UH_PUSH_PAYLOAD, data.get("payload"));
-        }
-
-
-
-        //PendingIntent.FLAG_UPDATE_CURRENT is required to pass along our Intent Extras
-        PendingIntent pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        try {
-            ApplicationInfo appInfo = applicationContext.getPackageManager().getApplicationInfo(applicationContext.getPackageName(), PackageManager.GET_META_DATA);
-
-            int pushIcon = appInfo.icon;
-            // check for a custom push icon
-            if (pushNotificationIcon > 0) {
-                pushIcon = pushNotificationIcon;
-            }
-
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(applicationContext)
-                    .setSmallIcon(pushIcon)
-                    .setContentText(message)
-                    .setContentTitle(title)
-                    .setAutoCancel(true)
-                    .setContentIntent(pendingIntent);
-
-            // use default sound
-            notificationBuilder.setDefaults(Notification.DEFAULT_SOUND);
-
-            return notificationBuilder.build();
-
-        } catch (Exception e) {
-            Log.e(UserHook.TAG, "error create push notification", e);
-            return null;
-        }
-
-    }
-
-
-    public static int getResourceId(String name, String type) {
-        return applicationContext.getResources().getIdentifier(name, type, applicationContext.getPackageName());
-    }
-
-    public static String getString(int id) {
-        return applicationContext.getResources().getString(id);
+        return UHInternal.getInstance().handlePushMessage(context, data);
     }
 
 
     public static void rateThisApp() {
 
-        startActivityToRate();
-
-        // tell User Hook that this user has rated this app
-        UserHook.markAsRated();
+        UHInternal.getInstance().rateThisApp();
     }
 
-    private static void startActivityToRate() {
-        Uri uri = Uri.parse("market://details?id=" + applicationContext.getPackageName());
-        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        if (goToMarket.resolveActivity(applicationContext.getPackageManager()) != null) {
-            activityLifecycle.getCurrentActivity().startActivity(goToMarket);
-            return;
-        }
 
-        activityLifecycle.getCurrentActivity().startActivity(new Intent(Intent.ACTION_VIEW,
-                Uri.parse("http://play.google.com/store/apps/details?id=" + applicationContext.getPackageName())));
+
+    public static void setFeedbackScreenTitle(String title) {
+
+        UHInternal.getInstance().setFeedbackScreenTitle(title);
     }
 
-    public static void setFeedbackScreenTitle(String title){
-        feedbackScreenTitle = title;
-    }
+    public static void setFeedbackCustomFields(Map<String, String> customFields) {
 
-    public static void setFeedbackCustomFields(Map<String,String> customFields) {
-        feedbackCustomFields = customFields;
+        UHInternal.getInstance().setFeedbackCustomFields(customFields);
     }
 
     public static void showFeedback() {
 
-        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
-        intent.putExtra(UHHostedPageActivity.TYPE_FEEDBACK, feedbackScreenTitle);
+        UHInternal.getInstance().showFeedback();
 
-        if (feedbackCustomFields != null && feedbackCustomFields.size() > 0) {
-            Bundle bundle = new Bundle();
-            for (String key : feedbackCustomFields.keySet()) {
-                bundle.putString(key, feedbackCustomFields.get(key));
-            }
-            intent.putExtra(UH_CUSTOM_FIELDS, bundle);
-        }
-
-        activityLifecycle.getCurrentActivity().startActivity(intent);
     }
 
     public static void showSurvey(String surveyId, String surveyTitle, UHHookPoint hookPoint) {
 
-        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
+        UHInternal.getInstance().showSurvey(surveyId, surveyTitle, hookPoint);
 
-        intent.putExtra(UHHostedPageActivity.TYPE_SURVEY, surveyId);
-        intent.putExtra(UHHostedPageActivity.SURVEY_TITLE, surveyTitle);
-        if (hookPoint != null) {
-            intent.putExtra(UHHostedPageActivity.HOOKPOINT_ID, hookPoint.getId());
-        }
-
-        activityLifecycle.getCurrentActivity().startActivity(intent);
     }
 
     public static void displayPrompt(String message, UHMessageMetaButton button1, UHMessageMetaButton button2) {
 
-        final UHMessageMeta meta = new UHMessageMeta();
-        meta.setBody(message);
+        UHInternal.getInstance().displayPrompt(message, button1, button2);
 
-        if (button1 != null && button2 != null) {
-            meta.setDisplayType(UHMessageMeta.TYPE_TWO_BUTTONS);
-        }
-        else if (button1 != null) {
-            meta.setDisplayType(UHMessageMeta.TYPE_ONE_BUTTON);
-        }
-        else {
-            meta.setDisplayType(UHMessageMeta.TYPE_NO_BUTTONS);
-        }
-
-        meta.setButton1(button1);
-        meta.setButton2(button2);
-
-        // add view to screen
-         if (UHMessageView.canDisplay() && activityLifecycle.getCurrentActivity() != null) {
-
-            activityLifecycle.getCurrentActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    UHMessageView view = new UHMessageView(activityLifecycle.getCurrentActivity(), meta);
-
-                    ViewGroup rootView = (ViewGroup) activityLifecycle.getCurrentActivity().findViewById(android.R.id.content);
-                    rootView.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    view.showDialog();
-                }
-            });
-
-        }
     }
+
 
     public static void showRatingPrompt(String message, String postiveButtonTitle, String negativeButtonTitle) {
 
@@ -454,7 +221,6 @@ public class UserHook {
 
         displayPrompt(message, button1, button2);
 
-        UserHook.markAsRated();
     }
 
     public static void showFeedbackPrompt(String message, String postiveButtonTitle, String negativeButtonTitle) {
@@ -469,18 +235,11 @@ public class UserHook {
 
         displayPrompt(message, button1, button2);
 
-        UserHook.markAsRated();
     }
 
     public static void displayStaticPage(String slug, String title) {
 
-        UHPage page = new UHPage();
-        page.setSlug(slug);
-        page.setName(title);
-
-        Intent intent = new Intent(activityLifecycle.getCurrentActivity(), UHHostedPageActivity.class);
-        intent.putExtra(UHHostedPageActivity.TYPE_PAGE, page);
-        activityLifecycle.getCurrentActivity().startActivity(intent);
+        UHInternal.getInstance().displayStaticPage(slug, title);
 
     }
 

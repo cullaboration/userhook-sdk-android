@@ -39,7 +39,7 @@ public class UHMessageTemplate {
         return cache.containsKey(name);
     }
 
-    public String renderTemplate(UHMessageMeta meta) {
+    public String renderTemplate(UHMessageMeta meta, Map<String,Object> parameters) {
 
         String html = cache.get(meta.getDisplayType());
 
@@ -55,7 +55,26 @@ public class UHMessageTemplate {
             html = html.replaceAll("<!-- button2 -->", meta.getButton2().getTitle());
         }
 
-        html = html.replaceAll("<!-- body -->", meta.getBody());
+
+        if (meta.getFeedbackBody() != null) {
+            html = html.replaceAll("<!-- feedback_body -->", meta.getFeedbackBody());
+        }
+
+        if (meta.getLeast() != null) {
+            html = html.replaceAll("<!-- least -->", meta.getLeast());
+        }
+
+        if (meta.getMost() != null) {
+            html = html.replaceAll("<!-- most -->", meta.getMost());
+        }
+
+        if (meta.getBody() != null) {
+            html = html.replaceAll("<!-- body -->", meta.getBody());
+        }
+
+        if (parameters.containsKey("id") && parameters.get("id") != null) {
+            html = html.replaceAll("<!-- hookpointId -->", parameters.get("id").toString());
+        }
 
         return html;
     }

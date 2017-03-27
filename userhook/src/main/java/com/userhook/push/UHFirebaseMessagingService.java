@@ -25,7 +25,7 @@ public class UHFirebaseMessagingService extends FirebaseMessagingService {
         // check if this message originated from User Hook or another push provider
         if (UserHook.isPushFromUserHook(remoteMessage.getData())) {
 
-            Notification notification = UserHook.handlePushMessage(remoteMessage.getData());
+            Notification notification = UserHook.handlePushMessage(getApplicationContext(), remoteMessage.getData());
 
             if (notification != null) {
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

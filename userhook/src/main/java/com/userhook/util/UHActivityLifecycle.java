@@ -31,6 +31,8 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
     private Activity currentActivity;
 
+    protected String sessionStartEventName = "launch";
+
     public UHActivityLifecycle() {
 
     }
@@ -67,17 +69,17 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
             // handle push payload
             if (intent.hasExtra(UserHook.UH_PUSH_PAYLOAD)) {
                 String payload = intent.getStringExtra(UserHook.UH_PUSH_PAYLOAD);
-                UserHook.handlePushPayload(activity, payload);
+                UHInternal.getInstance().handlePushPayload(activity, payload);
             }
 
             // handle new feedback if needed
             if (intent.hasExtra(UserHook.UH_PUSH_FEEDBACK)) {
-                UserHook.setHasNewFeedback(true);
+                UHInternal.getInstance().setHasNewFeedback(true);
                 intent.removeExtra(UserHook.UH_PUSH_FEEDBACK);
             }
 
             // track open
-            UserHook.trackPushOpen((Map<String,String>)intent.getSerializableExtra(UserHook.UH_PUSH_DATA));
+            UHInternal.getInstance().trackPushOpen((Map<String,String>)intent.getSerializableExtra(UserHook.UH_PUSH_DATA));
             intent.removeExtra(UserHook.UH_PUSH_TRACKED);
         }
 
@@ -131,12 +133,9 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
                 Map<String, Object> data = new HashMap<String,Object>();
                 data.put("session_time", sessionLength+"");
 
-                UHOperation operation = new UHOperation();
-                operation.updateSessionData(data, null);
+                UHInternal.getInstance().updateSessionData(data, null);
 
             }
-
-
 
             backgroundTime = System.currentTimeMillis();
 
@@ -166,7 +165,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
             operation.createSession(new UserHook.UHSuccessListener() {
                 @Override
                 public void onSuccess() {
-                    UserHook.fetchHookPoint(new UserHook.UHHookPointFetchListener() {
+                    UserHook.fetchHookPoint(sessionStartEventName, new UserHook.UHHookPointFetchListener() {
                         @Override
                         public void onSuccess(UHHookPoint hookPoint) {
                             if (hookPoint != null) {
@@ -176,7 +175,7 @@ public class UHActivityLifecycle implements Application.ActivityLifecycleCallbac
 
                         @Override
                         public void onError() {
-                            Log.e(UserHook.TAG,"error fetching hookpoints");
+                            Log.e(UserHook.TAG,"error fetching hook points");
                         }
                     });
                 }

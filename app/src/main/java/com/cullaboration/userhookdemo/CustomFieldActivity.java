@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.userhook.UserHook;
+import com.userhook.hookpoint.UHHookPoint;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +65,11 @@ public class CustomFieldActivity extends AppCompatActivity {
                 UserHook.updateCustomFields(customFields, new UserHook.UHSuccessListener() {
                     @Override
                     public void onSuccess() {
-                        Log.i("userhook", "custom fields updated");
+                        Log.i(UserHook.TAG, "custom fields updated");
+
+                        // fetch hook points from the server
+                        ((MainApplication)getApplication()).loadHookPoints("score_updated");
+
                     }
                 });
             }

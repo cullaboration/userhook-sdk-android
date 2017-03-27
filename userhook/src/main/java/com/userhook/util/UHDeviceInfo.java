@@ -7,6 +7,7 @@
  */
 package com.userhook.util;
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.util.Log;
@@ -18,25 +19,31 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 
-public class UHDeviceInfo {
+public class UHDeviceInfo implements UHDeviceInfoProvider {
 
-    public static String getOsVersion() {
+    private Context context;
+
+    public UHDeviceInfo(Context context) {
+        this.context = context;
+    }
+
+    public String getOsVersion() {
 
         return Build.VERSION.RELEASE +"";
     }
 
-    public static String getDevice() {
+    public String getDevice() {
         return Build.MANUFACTURER +" " + Build.MODEL;
     }
 
-    public static String getLocale() {
-        return UserHook.getApplicationContext().getResources().getConfiguration().locale.toString();
+    public String getLocale() {
+        return context.getResources().getConfiguration().locale.toString();
     }
 
-    public static String getAppVersion() {
+    public String getAppVersion() {
 
         try {
-            PackageInfo packageInfo = UserHook.getApplicationContext().getPackageManager().getPackageInfo(UserHook.getApplicationContext().getPackageName(), 0);
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             return packageInfo.versionName;
         }
         catch (Exception e) {
@@ -46,7 +53,7 @@ public class UHDeviceInfo {
         }
     }
 
-    public static long getTimezoneOffset() {
+    public long getTimezoneOffset() {
 
         Calendar cal = Calendar.getInstance();
         TimeZone timezone = cal.getTimeZone();

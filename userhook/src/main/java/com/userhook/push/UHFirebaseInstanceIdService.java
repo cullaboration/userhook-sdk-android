@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.userhook.UserHook;
+import com.userhook.util.UHInternal;
 
 public class UHFirebaseInstanceIdService extends FirebaseInstanceIdService {
 
@@ -22,7 +23,7 @@ public class UHFirebaseInstanceIdService extends FirebaseInstanceIdService {
 
         String token = FirebaseInstanceId.getInstance().getToken();
 
-        UserHook.registerPushToken(token);
+        UHInternal.getInstance().registerPushToken(token);
         Log.i(UserHook.TAG, "push token = " + token);
 
     }

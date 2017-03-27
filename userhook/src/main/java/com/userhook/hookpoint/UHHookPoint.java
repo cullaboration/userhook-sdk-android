@@ -24,6 +24,7 @@ public class UHHookPoint {
     public static final String TYPE_ACTION = "action";
     public static final String TYPE_SURVEY = "survey";
     public static final String TYPE_MESSAGE = "message";
+    public static final String TYPE_NPS = "nps";
 
     public static final String TYPE_RATING_PROMPT = "rating prompt";
     public static final String TYPE_ACTION_PROMPT = "action prompt";
@@ -72,6 +73,8 @@ public class UHHookPoint {
                 object = new UHHookPointSurvey(json);
             } else if (type.equalsIgnoreCase(TYPE_MESSAGE)) {
                 object = new UHHookPointMessage(json);
+            } else if (type.equalsIgnoreCase(TYPE_NPS)) {
+                object = new UHHookPointNPS(json);
             } else {
                 object = new UHHookPoint(json);
             }

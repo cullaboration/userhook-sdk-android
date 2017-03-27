@@ -27,9 +27,9 @@ import com.userhook.UserHook;
 import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHPage;
 import com.userhook.util.UHAsyncTask;
+import com.userhook.util.UHInternal;
 import com.userhook.util.UHOperation;
 import com.userhook.util.UHPostAsyncTask;
-import com.userhook.util.UHUser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class UHHostedPageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(UserHook.getResourceId("uh_hostedpage_activity", "layout"));
+        setContentView(UHInternal.getInstance().getResourceId(getApplicationContext(), "uh_hostedpage_activity", "layout"));
 
         String title = "";
         String url = "";
@@ -104,7 +104,7 @@ public class UHHostedPageActivity extends AppCompatActivity {
 
 
 
-        Toolbar toolbar = (Toolbar) findViewById(UserHook.getResourceId("toolbar","id"));
+        Toolbar toolbar = (Toolbar) findViewById(UHInternal.getInstance().getResourceId(getApplicationContext(), "toolbar","id"));
         if (toolbar != null) {
 
             toolbar.setTitle(title);
@@ -128,7 +128,7 @@ public class UHHostedPageActivity extends AppCompatActivity {
 
 
 
-        webView = (WebView) findViewById(UserHook.getResourceId("webView","id"));
+        webView = (WebView) findViewById(UHInternal.getInstance().getResourceId(getApplicationContext(), "webView","id"));
         webView.getSettings().setJavaScriptEnabled(true);
         UHWebViewClient webClient = new UHWebViewClient();
         webView.setWebViewClient(webClient);
@@ -286,7 +286,7 @@ public class UHHostedPageActivity extends AppCompatActivity {
                     String hookpointId = url.substring((UserHook.UH_URL_SCHEMA+"trackInteractionAndClose/").length());
                     if (!hookpointId.equalsIgnoreCase("/")) {
                         UHHookPoint hookPoint = new UHHookPoint(hookpointId);
-                        UserHook.trackHookPointInteraction(hookPoint);
+                        UHInternal.getInstance().trackHookPointInteraction(hookPoint);
                     }
 
 
@@ -332,11 +332,11 @@ public class UHHostedPageActivity extends AppCompatActivity {
             headers.put(UHOperation.UH_SDK_HEADER_NAME, UHOperation.UH_SDK_HEADER_PREFIX + UserHook.UH_SDK_VERSION);
 
             // add user header values if available
-            if (UHUser.getUserId() != null) {
-                headers.put(UHOperation.UH_USER_ID_HEADER_NAME, UHUser.getUserId());
+            if (UHInternal.getInstance().getUser().getUserId() != null) {
+                headers.put(UHOperation.UH_USER_ID_HEADER_NAME, UHInternal.getInstance().getUser().getUserId());
             }
-            if (UHUser.getUserKey() != null) {
-                headers.put(UHOperation.UH_USER_KEY_HEADER_NAME, UHUser.getUserKey());
+            if (UHInternal.getInstance().getUser().getUserKey() != null) {
+                headers.put(UHOperation.UH_USER_KEY_HEADER_NAME, UHInternal.getInstance().getUser().getUserKey());
             }
 
             return headers;

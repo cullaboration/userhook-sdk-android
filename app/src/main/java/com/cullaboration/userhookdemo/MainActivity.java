@@ -30,11 +30,10 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.userhook.UserHook;
-import com.userhook.hookpoint.UHHookPoint;
 import com.userhook.model.UHMessageMetaButton;
 import com.userhook.model.UHPage;
+import com.userhook.util.UHInternal;
 import com.userhook.util.UHOperation;
-import com.userhook.util.UHUser;
 
 import org.xml.sax.XMLReader;
 
@@ -93,7 +92,9 @@ public class MainActivity extends AppCompatActivity
         btnReloadHookpoints.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadHookPoints();
+
+                // fetch hook points from the server
+                ((MainApplication)getApplication()).loadHookPoints("force_reload");
             }
         });
 
@@ -214,14 +215,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public class UlTagHandler implements Html.TagHandler {
-        @Override
-        public void handleTag(boolean opening, String tag, Editable output,
-                              XMLReader xmlReader) {
-            if (tag.equals("ul") && !opening) output.append("\n");
-            if (tag.equals("li") && opening) output.append("\n\t•");
-        }
-    }
 
     public void clickedFeedback() {
 
@@ -240,23 +233,6 @@ public class MainActivity extends AppCompatActivity
 
         UserHook.showRatingPrompt("Great! A rating or review really helps us. Would you mind leaving us one now?", "Sure", "Not Now");
 
-    }
-
-    public void loadHookPoints() {
-
-        UserHook.fetchHookPoint(new UserHook.UHHookPointFetchListener() {
-            @Override
-            public void onSuccess(UHHookPoint hookPoint) {
-                if (hookPoint != null) {
-                    hookPoint.execute(MainActivity.this);
-                }
-            }
-
-            @Override
-            public void onError() {
-                Log.e("userhook", "error fetching hookpoints");
-            }
-        });
     }
 
     public void addView(final View view) {
@@ -295,7 +271,7 @@ public class MainActivity extends AppCompatActivity
         editor.apply();
 
         // used just in the demo app. In a production app, there is no reason to call this
-        UHUser.clear();
+        UHInternal.getInstance().getUser().clear();
 
         // force the creation of a new session. In a production app, you would never do this. The SDK
         // handles all session tracking.

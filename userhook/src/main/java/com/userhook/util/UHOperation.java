@@ -67,6 +67,15 @@ public class UHOperation {
         fetchMessageTemplates();
     }
 
+    protected UHPostAsyncTask createPostRequest(Map<String,Object> data, UHAsyncTask.UHAsyncTaskListener listener) {
+        return new UHPostAsyncTask(data, listener);
+    }
+
+    protected UHAsyncTask createGetRequest(Map<String,Object> data, UHAsyncTask.UHAsyncTaskListener listener) {
+        return new UHAsyncTask(data, listener);
+    }
+
+
 
     public void updateSessionData(Map<String, Object> data, final UserHook.UHSuccessListener listener) {
 
@@ -74,171 +83,196 @@ public class UHOperation {
             data = new HashMap<>();
         }
 
-        if (UHUser.getUserId() != null) {
-            data.put("user", UHUser.getUserId());
+        if (UHInternal.getInstance().getUser().getUserId() != null) {
+            data.put("user", UHInternal.getInstance().getUser().getUserId());
         }
+
+        UHDeviceInfoProvider device = UHInternal.getInstance().getDevice();
 
         data.put("sdk", UserHook.UH_SDK_VERSION);
         data.put("os", "android");
-        data.put("os_version", UHDeviceInfo.getOsVersion());
-        data.put("device", UHDeviceInfo.getDevice());
-        data.put("locale", UHDeviceInfo.getLocale());
-        data.put("app_version", UHDeviceInfo.getAppVersion());
-        data.put("timezone_offset", UHDeviceInfo.getTimezoneOffset());
+        data.put("os_version", device.getOsVersion());
+        data.put("device", device.getDevice());
+        data.put("locale", device.getLocale());
+        data.put("app_version", device.getAppVersion());
+        data.put("timezone_offset", device.getTimezoneOffset());
 
-
-        UHPostAsyncTask task = new UHPostAsyncTask(data, new UHAsyncTask.UHAsyncTaskListener() {
+        UHAsyncTask.UHAsyncTaskListener taskListener = new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String string) {
 
-                try {
-                    if (string == null || string.isEmpty()) {
-                        Log.e(UserHook.TAG,"update session server response was null");
-                        return;
-                    }
-
-                    JSONObject json = new JSONObject(string);
-
-                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
-
-                        JSONObject data = json.getJSONObject("data");
-
-                        if (data.has("user")) {
-                            String user = data.getString("user");
-                            UHUser.setUserId(user);
-                        }
-
-                        if (data.has("key")) {
-                            String key = data.getString("key");
-                            UHUser.setUserKey(key);
-                        }
-
-                        if (data.has("new_feedback") && data.getBoolean("new_feedback")) {
-                            UserHook.setHasNewFeedback(true);
-                        } else {
-                            UserHook.setHasNewFeedback(false);
-                        }
-
-                        if (listener != null) {
-                            listener.onSuccess();
-                        }
-                    } else {
-                        Log.e(UserHook.TAG, "userhook response status was error");
-                    }
-
-                } catch (Exception e) {
-                    Log.e(UserHook.TAG, "error updating session data", e);
-                }
+                handleUpdateSession(string, listener);
 
             }
-        });
+        };
 
+        UHPostAsyncTask task = createPostRequest(data, taskListener);
 
         task.execute(UserHook.UH_API_URL + UH_PATH_SESSION);
 
     }
 
+    protected void handleUpdateSession(String string, UserHook.UHSuccessListener listener) {
+
+        try {
+            if (string == null || string.isEmpty()) {
+                Log.e(UserHook.TAG,"update session server response was null");
+                return;
+            }
+
+            JSONObject json = new JSONObject(string);
+
+            if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+
+                JSONObject data = json.getJSONObject("data");
+
+                if (data.has("user")) {
+                    String user = data.getString("user");
+                    UHInternal.getInstance().getUser().setUserId(user);
+                }
+
+                if (data.has("key")) {
+                    String key = data.getString("key");
+                    UHInternal.getInstance().getUser().setUserKey(key);
+                }
+
+                if (data.has("new_feedback") && data.getBoolean("new_feedback")) {
+                    UserHook.setHasNewFeedback(true);
+                } else {
+                    UserHook.setHasNewFeedback(false);
+                }
+
+                if (listener != null) {
+                    listener.onSuccess();
+                }
+            } else {
+                Log.e(UserHook.TAG, "userhook response status was error");
+            }
+
+        } catch (Exception e) {
+            Log.e(UserHook.TAG, "error updating session data", e);
+        }
+    }
+
     public void fetchPageNames(final UHArrayListener listener) {
 
 
-        UHAsyncTask task = new UHAsyncTask(new HashMap<String, Object>(), new UHAsyncTask.UHAsyncTaskListener() {
+        UHAsyncTask.UHAsyncTaskListener taskListener = new UHAsyncTask.UHAsyncTaskListener() {
             @Override
-            public void onSuccess(String string) {
-
-                try {
-
-                    if (string == null || string.isEmpty()) {
-                        Log.e(UserHook.TAG,"fetch page names server response was null");
-                        return;
-                    }
-
-                    JSONObject json = new JSONObject(string);
-
-                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
-
-                        JSONArray data = json.getJSONArray("data");
-
-                        List<UHPage> pages = new ArrayList<>();
-
-                        for (int i = 0; i < data.length(); i++) {
-                            JSONObject item = data.getJSONObject(i);
-
-                            pages.add(new UHPage(item));
-
-                        }
-
-                        if (listener != null) {
-                            listener.onSuccess(pages);
-                        }
-
-                    } else {
-                        Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
-                    }
-
-                } catch (Exception e) {
-                    Log.e(UserHook.TAG, "error fetching page names", e);
-                }
-
+            public void onSuccess(String result) {
+                handleFetchPageNames(result, listener);
             }
-        });
+        };
 
+        UHAsyncTask task = createGetRequest(new HashMap<String,Object>(), taskListener);
 
         task.execute(UserHook.UH_API_URL + UH_PATH_PAGES);
 
+    }
+
+    protected void handleFetchPageNames(String string, UHArrayListener listener) {
+
+        try {
+
+            if (string == null || string.isEmpty()) {
+                Log.e(UserHook.TAG,"fetch page names server response was null");
+                return;
+            }
+
+            JSONObject json = new JSONObject(string);
+
+            if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+
+                JSONArray data = json.getJSONArray("data");
+
+                List<UHPage> pages = new ArrayList<>();
+
+                for (int i = 0; i < data.length(); i++) {
+                    JSONObject item = data.getJSONObject(i);
+
+                    pages.add(new UHPage(item));
+
+                }
+
+                if (listener != null) {
+                    listener.onSuccess(pages);
+                }
+
+            } else {
+                Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
+            }
+
+        } catch (Exception e) {
+            Log.e(UserHook.TAG, "error fetching page names", e);
+        }
     }
 
 
     public void fetchMessageTemplates() {
 
 
-        UHAsyncTask task = new UHAsyncTask(new HashMap<String, Object>(), new UHAsyncTask.UHAsyncTaskListener() {
+        UHAsyncTask.UHAsyncTaskListener taskListener = new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String string) {
 
-                if (string == null || string.isEmpty()) {
-                    Log.e(UserHook.TAG,"fetch message templates server response was null");
-                    return;
-                }
-
-                try {
-
-                    JSONObject json = new JSONObject(string);
-
-                    if (json.has("templates")) {
-
-                        JSONObject data = json.getJSONObject("templates");
-
-                        Iterator<String> iter = data.keys();
-                        while (iter.hasNext()) {
-                            String name = iter.next();
-                            String template = data.getString(name);
-
-                            UHMessageTemplate.getInstance().addToCache(name, template);
-
-                        }
-
-
-
-                    } else {
-                        Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
-                    }
-
-                } catch (Exception e) {
-                    Log.e(UserHook.TAG, "error fetching page names", e);
-                }
-
+                handleMessageTemplates(string);
             }
-        });
+        };
 
+        UHAsyncTask task = createGetRequest(new HashMap<String, Object>(), taskListener);
 
         task.execute(UserHook.UH_HOST_URL + UH_PATH_MESSAGE_TEMPLATES);
 
     }
 
-    public void fetchHookpoint(final UserHook.UHHookPointFetchListener listener) {
 
-        if (UHUser.getUserId() == null) {
+    protected void handleMessageTemplates(String string) {
+
+
+        if (string == null || string.isEmpty()) {
+            Log.e(UserHook.TAG,"fetch message templates server response was null");
+            return;
+        }
+
+        try {
+
+            JSONObject json = new JSONObject(string);
+
+            if (json.has("templates")) {
+
+                JSONObject data = json.getJSONObject("templates");
+
+                Iterator<String> iter = data.keys();
+                while (iter.hasNext()) {
+                    String name = iter.next();
+                    String template = data.getString(name);
+
+                    UHMessageTemplate.getInstance().addToCache(name, template);
+
+                }
+
+
+
+            } else {
+                Log.e(UserHook.TAG, "userhook response status was error for page name fetch");
+            }
+
+        } catch (Exception e) {
+            Log.e(UserHook.TAG, "error fetching page names", e);
+        }
+
+
+    }
+
+    public void fetchHookpoint(String event, final UserHook.UHHookPointFetchListener listener) {
+
+        if (UHInternal.getInstance().getUser().getUserId() == null) {
             Log.e(UserHook.TAG, "cannot fetch hookpoint, user id is null");
+            return;
+        }
+
+        if  (event.isEmpty()) {
+            Log.e(UserHook.TAG, "event is required to fetch hook points");
             return;
         }
 
@@ -250,77 +284,86 @@ public class UHOperation {
         fetchingHookpoints = true;
 
         Map<String, Object> params = new HashMap<>();
-        params.put("user", UHUser.getUserId());
+        params.put("user", UHInternal.getInstance().getUser().getUserId());
+        params.put("event", event);
 
-        UHAsyncTask task = new UHAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
+        UHAsyncTask.UHAsyncTaskListener taskListener = new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
 
                 fetchingHookpoints = false;
 
-                if (result == null || result.isEmpty()) {
-                    Log.e(UserHook.TAG,"fetch hook points server response was null");
-                    return;
-                }
-
-                try {
-
-                    JSONObject json = new JSONObject(result);
-
-                    if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
-
-                        JSONObject data = json.getJSONObject("data");
-
-                        UHHookPoint hookPoint = null;
-
-                        if (data.has("hookpoint") && !data.isNull("hookpoint")) {
-                            JSONObject hookpointData = data.getJSONObject("hookpoint");
-
-                            hookPoint = UHHookPoint.createWithData(hookpointData);
-
-                        }
-
-                        if (listener != null) {
-                            listener.onSuccess(hookPoint);
-                        }
-
-                    } else {
-                        Log.e(UserHook.TAG, "userhook response status was error for fetch hookpoint");
-
-                        if (listener != null) {
-                            listener.onError();
-                        }
-                    }
-
-                } catch (Exception e) {
-                    Log.e(UserHook.TAG, "error fetching hookpoint", e);
-
-                    if (listener != null) {
-                        listener.onError();
-                    }
-                }
+                handleFetchHookpoint(result, listener);
 
             }
-        });
+        };
+
+        UHAsyncTask task = createGetRequest(params, taskListener);
 
         task.execute(UserHook.UH_API_URL + UH_PATH_HOOK_POINT_FETCH);
 
     }
 
+    protected void handleFetchHookpoint(String result, UserHook.UHHookPointFetchListener listener) {
+
+        if (result == null || result.isEmpty()) {
+            Log.e(UserHook.TAG,"fetch hook points server response was null");
+            return;
+        }
+
+        try {
+
+            JSONObject json = new JSONObject(result);
+
+            if (json.has("status") && json.getString("status").equalsIgnoreCase("success")) {
+
+                JSONObject data = json.getJSONObject("data");
+
+                UHHookPoint hookPoint = null;
+
+                if (data.has("hookpoint") && !data.isNull("hookpoint")) {
+                    JSONObject hookpointData = data.getJSONObject("hookpoint");
+
+                    hookPoint = UHHookPoint.createWithData(hookpointData);
+
+                }
+
+                if (listener != null) {
+                    listener.onSuccess(hookPoint);
+                }
+
+            } else {
+                Log.e(UserHook.TAG, "userhook response status was error for fetch hookpoint");
+
+                if (listener != null) {
+                    listener.onError();
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e(UserHook.TAG, "error fetching hookpoint", e);
+
+            if (listener != null) {
+                listener.onError();
+            }
+        }
+    }
+
+
     public void trackHookpointAction(UHHookPoint hookPoint, final String action) {
 
         Map<String, Object> params = new HashMap<>();
-        params.put("user", UHUser.getUserId());
+        params.put("user", UHInternal.getInstance().getUser().getUserId());
         params.put("hookpoint", hookPoint.getId());
         params.put("action", action);
 
-        if (UHUser.getUserId() == null) {
+        if (UHInternal.getInstance().getUser().getUserId() == null) {
             Log.e(UserHook.TAG, "cannot track hookpoint, user id is null");
             return;
         }
 
 
-        UHPostAsyncTask task = new UHPostAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
+        UHPostAsyncTask task = createPostRequest(params, new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
 
@@ -360,8 +403,8 @@ public class UHOperation {
     public void registerPushToken(final String deviceToken, int retryCount) {
 
         Map<String, Object> params = new HashMap<>();
-        if (UHUser.getUserId() != null) {
-            params.put("user", UHUser.getUserId());
+        if (UHInternal.getInstance().getUser().getUserId() != null) {
+            params.put("user", UHInternal.getInstance().getUser().getUserId());
         }
         else {
 
@@ -387,15 +430,15 @@ public class UHOperation {
         params.put("os", "android");
         params.put("sdk", UserHook.UH_SDK_VERSION);
         params.put("token", deviceToken);
-        params.put("timezone_offset", UHDeviceInfo.getTimezoneOffset());
+        params.put("timezone_offset", UHInternal.getInstance().getDevice().getTimezoneOffset());
 
-        if (UHUser.getUserId() == null) {
+        if (UHInternal.getInstance().getUser().getUserId() == null) {
             Log.e(UserHook.TAG, "cannot register push token if user is null");
             return;
         }
 
 
-        UHPostAsyncTask task = new UHPostAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
+        UHPostAsyncTask task = createPostRequest(params, new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
 
@@ -434,8 +477,8 @@ public class UHOperation {
     public void trackPushOpen(Map<String,String> data) {
 
         Map<String, Object> params = new HashMap<>();
-        if (UHUser.getUserId() != null) {
-            params.put("user", UHUser.getUserId());
+        if (UHInternal.getInstance().getUser().getUserId() != null) {
+            params.put("user", UHInternal.getInstance().getUser().getUserId());
         }
         params.put("os", "android");
         params.put("sdk", UserHook.UH_SDK_VERSION);
@@ -443,13 +486,13 @@ public class UHOperation {
         String payload = UHJsonUtils.toJSON(data).toString();
         params.put("payload", payload);
 
-        if (UHUser.getUserId() == null) {
+        if (UHInternal.getInstance().getUser().getUserId() == null) {
             Log.e(UserHook.TAG, "cannot track push token if user is null");
             return;
         }
 
 
-        UHPostAsyncTask task = new UHPostAsyncTask(params, new UHAsyncTask.UHAsyncTaskListener() {
+        UHPostAsyncTask task = createPostRequest(params, new UHAsyncTask.UHAsyncTaskListener() {
             @Override
             public void onSuccess(String result) {
 
@@ -490,5 +533,10 @@ public class UHOperation {
         void onSuccess(List<T> items);
     }
 
+    public interface Factory {
+
+        UHOperation build();
+
+    }
 
 }

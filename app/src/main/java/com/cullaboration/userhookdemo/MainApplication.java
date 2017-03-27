@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.userhook.UserHook;
+import com.userhook.hookpoint.UHHookPoint;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,47 +29,67 @@ public class MainApplication extends Application {
         userhook_application_key inside of your strings.xml file. You may hard code your keys directly
         in the code below or use a different method to secure your keys.
          */
-            UserHook.initialize(this, getString(R.string.userhook_application_id), getString(R.string.userhook_application_key), true);
-            UserHook.setPayloadListener(new UserHook.UHPayloadListener() {
-                @Override
-                public void onAction(Activity activity, Map<String, Object> payload) {
+        UserHook.initialize(this, getString(R.string.userhook_application_id), getString(R.string.userhook_application_key), true);
+        UserHook.setPayloadListener(new UserHook.UHPayloadListener() {
+            @Override
+            public void onAction(Activity activity, Map<String, Object> payload) {
 
-                    String str = "";
-                    for (String key : payload.keySet()) {
-                        if (str.equals("")) {
-                            str += ", ";
-                        }
-                        str = key + " = " + payload.get(key);
-                        Log.i("action", key + " = " + payload.get(key));
+                String str = "";
+                for (String key : payload.keySet()) {
+                    if (str.equals("")) {
+                        str += ", ";
                     }
+                    str = key + " = " + payload.get(key);
+                    Log.i("action", key + " = " + payload.get(key));
+                }
 
-                    Toast.makeText(activity, "the app responded to action: " + str, Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "the app responded to action: " + str, Toast.LENGTH_LONG).show();
 
+
+            }
+        });
+
+        // set settings for the feedback screen
+        UserHook.setFeedbackScreenTitle("Feedback");
+        Map<String, String> customFields = new HashMap<>();
+        customFields.put("username", "user123");
+        UserHook.setFeedbackCustomFields(customFields);
+
+        UserHook.setFeedbackListener(new UserHook.UHFeedbackListener() {
+            @Override
+            public void onNewFeedback(final Activity activity) {
+
+                if (activity != null) {
+
+                    UserHook.showFeedbackPrompt("You have a new response to your recently submitted feedback. Do you want to read it now?", "Read Now", "Later");
 
                 }
-            });
+            }
+        });
 
-            // set settings for the feedback screen
-            UserHook.setFeedbackScreenTitle("Feedback");
-            Map<String, String> customFields = new HashMap<>();
-            customFields.put("username", "user123");
-            UserHook.setFeedbackCustomFields(customFields);
-
-            UserHook.setFeedbackListener(new UserHook.UHFeedbackListener() {
-                @Override
-                public void onNewFeedback(final Activity activity) {
-
-                    if (activity != null) {
-
-                        UserHook.showFeedbackPrompt("You have a new response to your recently submitted feedback. Do you want to read it now?", "Read Now", "Later");
-
-                    }
-                }
-            });
-
-            // set custom notification icon
-            UserHook.setPushNotificationIcon(R.drawable.notification);
+        // set custom notification icon
+        UserHook.setPushNotificationIcon(R.drawable.notification);
 
 
-        }
     }
+
+    public void loadHookPoints(String event) {
+
+        UserHook.fetchHookPoint(event, new UserHook.UHHookPointFetchListener() {
+            @Override
+            public void onSuccess(UHHookPoint hookPoint) {
+                if (hookPoint != null) {
+                    hookPoint.execute(UserHook.getActivityLifecycle().getCurrentActivity());
+                }
+            }
+
+            @Override
+            public void onError() {
+                Log.e(UserHook.TAG,"error fetching hook points");
+            }
+        });
+    }
+
+}
+
+

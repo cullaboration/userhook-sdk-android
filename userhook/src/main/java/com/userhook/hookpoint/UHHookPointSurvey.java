@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.util.Log;
 
 import com.userhook.UserHook;
+import com.userhook.util.UHInternal;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,7 +55,7 @@ public class UHHookPointSurvey extends UHHookPoint {
 
             UserHook.showSurvey(surveyId, publicTitle, this);
 
-            UserHook.trackHookPointDisplay(this);
+            UHInternal.getInstance().trackHookPointDisplay(this);
 
 
         }

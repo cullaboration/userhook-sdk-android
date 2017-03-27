@@ -56,7 +56,10 @@ public class PurchaseActivity extends AppCompatActivity {
         UserHook.updatePurchasedItem(sku, price, new UserHook.UHSuccessListener() {
             @Override
             public void onSuccess() {
-                Log.i("userhook", "bought product: " + sku + " for: " + price);
+                Log.i(UserHook.TAG, "bought product: " + sku + " for: " + price);
+
+                // fetch hook points from the server
+                ((MainApplication)getApplication()).loadHookPoints("purchased");
             }
         });
 

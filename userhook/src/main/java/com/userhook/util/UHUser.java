@@ -13,39 +13,45 @@ import android.content.SharedPreferences;
 
 import com.userhook.UserHook;
 
-public class UHUser {
+public class UHUser implements UHUserProvider {
 
     private static final String UH_USER_ID = "UH_userid";
     private static final String UH_USER_KEY = "UH_userkey";
 
     private static final String UH_GROUP = "group";
 
-    public static String getUserId() {
-        SharedPreferences prefs = UserHook.getApplicationContext().getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
+    private Context context;
+
+    public UHUser(Context context) {
+        this.context = context;
+    }
+
+    public String getUserId() {
+        SharedPreferences prefs = context.getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
         return prefs.getString(UH_USER_ID, null);
     }
 
-    public static String getUserKey() {
-        SharedPreferences prefs = UserHook.getApplicationContext().getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
+    public String getUserKey() {
+        SharedPreferences prefs = context.getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
         return prefs.getString(UH_USER_KEY, null);
     }
 
-    public static void setUserId(String userId) {
-        SharedPreferences prefs = UserHook.getApplicationContext().getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
+    public void setUserId(String userId) {
+        SharedPreferences prefs = context.getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(UH_USER_ID, userId);
         editor.apply();
     }
 
-    public static void setUserKey(String userKey) {
-        SharedPreferences prefs = UserHook.getApplicationContext().getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
+    public void setUserKey(String userKey) {
+        SharedPreferences prefs = context.getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(UH_USER_KEY, userKey);
         editor.apply();
     }
 
-    public static void clear() {
-        SharedPreferences prefs = UserHook.getApplicationContext().getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
+    public void clear() {
+        SharedPreferences prefs = context.getSharedPreferences(UH_GROUP, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.clear();
         editor.apply();

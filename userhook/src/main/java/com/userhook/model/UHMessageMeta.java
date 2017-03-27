@@ -37,6 +37,12 @@ public class UHMessageMeta {
     protected UHMessageMetaButton button1;
     protected UHMessageMetaButton button2;
 
+    // used by nps prompts
+    protected String feedback_body;
+    protected Boolean feedback = false;
+    protected String least;
+    protected String most;
+
     public String getDisplayType() {
         return displayType;
     }
@@ -69,17 +75,42 @@ public class UHMessageMeta {
         this.button2 = button2;
     }
 
+    public String getFeedbackBody() {
+        return feedback_body;
+    }
+
+    public Boolean getFeedback() {
+        return feedback;
+    }
+
+    public String getLeast() {
+        return least;
+    }
+
+    public String getMost() {
+        return most;
+    }
+
     public static UHMessageMeta fromJSON(JSONObject json) {
 
         UHMessageMeta meta = new UHMessageMeta();
 
         try {
 
-            String[] fields = {"displayType", "body"};
+            // string fields
+            String[] fields = {"displayType", "body", "most","least","feedback_body"};
             for (String field : fields) {
                 if (json.has(field)) {
                     Field f = UHMessageMeta.class.getDeclaredField(field);
                     f.set(meta, json.getString(field));
+                }
+            }
+
+            String[] boolFields = {"feedback"};
+            for (String field : boolFields) {
+                if (json.has(field)) {
+                    Field f = UHMessageMeta.class.getDeclaredField(field);
+                    f.set(meta, json.getBoolean(field));
                 }
             }
 
@@ -102,6 +133,24 @@ public class UHMessageMeta {
         return meta;
     }
 
+    public void setValueByKey(String key, String value) {
+
+        if (key == null) {
+            return;
+        }
+
+        try {
+
+            Field f = UHMessageMeta.class.getDeclaredField(key);
+            f.set(this, value);
+
+        }
+        catch (Exception e) {
+            Log.e(UserHook.TAG, "error setting meta value by key", e);
+        }
+
+    }
+
     public String toJSONString() {
 
         JSONObject json = new JSONObject();
@@ -120,6 +169,19 @@ public class UHMessageMeta {
 
             if (button2 != null) {
                 json.put("button2", button2.toJSON());
+            }
+
+            if (feedback_body != null) {
+                json.put("feedback_body", feedback);
+                json.put("feedback", feedback);
+            }
+
+            if (least != null) {
+                json.put("least", least);
+            }
+
+            if (most != null) {
+                json.put("most", most);
             }
 
         }

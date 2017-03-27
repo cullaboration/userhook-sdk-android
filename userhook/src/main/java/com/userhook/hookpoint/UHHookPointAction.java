@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.util.Log;
 
 import com.userhook.UserHook;
+import com.userhook.util.UHInternal;
 import com.userhook.util.UHJsonUtils;
 
 import org.json.JSONException;
@@ -47,8 +48,8 @@ public class UHHookPointAction extends UHHookPoint {
 
     public void execute(final Activity activity) {
 
-        UserHook.actionReceived(activity, payload);
-        UserHook.trackHookPointInteraction(this);
+        UHInternal.getInstance().actionReceived(activity, payload);
+        UHInternal.getInstance().trackHookPointInteraction(this);
 
     }
 }

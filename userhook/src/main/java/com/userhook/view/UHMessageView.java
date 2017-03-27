@@ -15,6 +15,8 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +34,7 @@ import com.userhook.hookpoint.UHHookPointMessage;
 import com.userhook.model.UHMessageMeta;
 import com.userhook.model.UHMessageMetaButton;
 import com.userhook.util.UHAsyncTask;
+import com.userhook.util.UHInternal;
 import com.userhook.util.UHJsonUtils;
 import com.userhook.util.UHMessageTemplate;
 import com.userhook.util.UHPostAsyncTask;
@@ -57,9 +60,11 @@ public class UHMessageView extends RelativeLayout {
     protected boolean contentLoaded;
     protected boolean showAfterLoad;
 
-    protected int dialogWidth = 280; // in dp
+    protected int dialogWidth = UserHook.dialogWidth;
 
     public static final String UH_MESSAGE_PATH = "/message";
+
+    protected Context context;
 
     /*
     flag used to track if a message view is currently being displayed,
@@ -110,6 +115,7 @@ public class UHMessageView extends RelativeLayout {
 
     private void init(Context context) {
 
+        this.context = context;
 
         if (!isInEditMode()) {
             overlay = new LinearLayout(context);
@@ -139,8 +145,8 @@ public class UHMessageView extends RelativeLayout {
 
         if (contentLoaded) {
 
-            int overlayInId = UserHook.getResourceId("uh_overlay_in", "anim");
-            int dialogInId = UserHook.getResourceId("uh_dialog_in", "anim");
+            int overlayInId = UHInternal.getInstance().getResourceId(context, "uh_overlay_in", "anim");
+            int dialogInId = UHInternal.getInstance().getResourceId(context, "uh_dialog_in", "anim");
 
             overlay.setVisibility(VISIBLE);
             overlay.startAnimation(AnimationUtils.loadAnimation(getContext(), overlayInId));
@@ -156,8 +162,8 @@ public class UHMessageView extends RelativeLayout {
 
         displaying = false;
 
-        int overlayOutId = UserHook.getResourceId("uh_overlay_out", "anim");
-        int dialogOutId = UserHook.getResourceId("uh_dialog_out", "anim");
+        int overlayOutId = UHInternal.getInstance().getResourceId(context, "uh_overlay_out", "anim");
+        int dialogOutId = UHInternal.getInstance().getResourceId(context, "uh_dialog_out", "anim");
 
         if (contentView != null) {
             contentView.startAnimation(AnimationUtils.loadAnimation(getContext(), dialogOutId));
@@ -294,7 +300,7 @@ public class UHMessageView extends RelativeLayout {
 
         } else if (UHMessageTemplate.getInstance().hasTemplate(meta.getDisplayType())) {
 
-            String html = UHMessageTemplate.getInstance().renderTemplate(meta);
+            String html = UHMessageTemplate.getInstance().renderTemplate(meta, params);
 
             loadWebViewContent(html);
 
@@ -327,31 +333,42 @@ public class UHMessageView extends RelativeLayout {
 
     }
 
-    protected void loadWebViewContent(String html) {
+    protected void loadWebViewContent(final String html) {
 
         Activity activity = UserHook.getActivityLifecycle().getCurrentActivity();
         if (activity == null) {
             return;
         }
 
-        WebView webView = new WebView(activity);
-        webView.setWebViewClient(new MessageWebViewClient());
-        webView.getSettings().setJavaScriptEnabled(true);
+        // only create the webview once
+        if (contentView == null) {
+            WebView webView = new WebView(activity);
+            webView.setWebViewClient(new MessageWebViewClient());
+            webView.getSettings().setJavaScriptEnabled(true);
 
-        // set background of webview to be transparent
-        webView.setBackgroundColor(Color.TRANSPARENT);
-        webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+            // set background of webview to be transparent
+            webView.setBackgroundColor(Color.TRANSPARENT);
+            webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
-        // find dialog width in pixels
-        final float scale = getResources().getDisplayMetrics().density;
-        int width = (int) (dialogWidth * scale);
+            // find dialog width in pixels
+            final float scale = getResources().getDisplayMetrics().density;
+            int width = (int) (dialogWidth * scale);
 
-        LayoutParams layoutParams = new LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.addRule(CENTER_IN_PARENT);
-        addView(webView, layoutParams);
+            LayoutParams layoutParams = new LayoutParams(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.addRule(CENTER_IN_PARENT);
+            addView(webView, layoutParams);
+            contentView = webView;
+        }
 
-        webView.loadData(html, "text/html; charset=UTF-8", null);
-        contentView = webView;
+        // update webview on main thread
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ((WebView)contentView).loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+            }
+        });
+
 
         contentLoaded = true;
     }
@@ -380,7 +397,7 @@ public class UHMessageView extends RelativeLayout {
                     JSONObject payloadJson = new JSONObject(button.getPayload());
                     Map<String, Object> payload = UHJsonUtils.toMap(payloadJson);
 
-                    UserHook.actionReceived(UserHook.getActivityLifecycle().getCurrentActivity(), payload);
+                    UHInternal.getInstance().actionReceived(UserHook.getActivityLifecycle().getCurrentActivity(), payload);
 
                 } catch (JSONException je) {
                     Log.e(UserHook.TAG, "error parsing hook point payload json", je);
@@ -399,7 +416,7 @@ public class UHMessageView extends RelativeLayout {
         }
 
         if (hookpoint != null) {
-            UserHook.trackHookPointInteraction(hookpoint);
+            UHInternal.getInstance().trackHookPointInteraction(hookpoint);
         }
 
 
@@ -417,16 +434,57 @@ public class UHMessageView extends RelativeLayout {
                 if (uri.getHost().equals("close")) {
                     hideDialog();
                 }
+                else if (uri.getHost().equals("form")) {
+                    // intercept form posts and handle them directly
 
-                UHMessageMetaButton button = null;
+                    final WebView finalWebView = view;
 
-                if (uri.getHost().equals("button1")) {
-                    button = meta.getButton1();
-                } else if (uri.getHost().equals("button2")) {
-                    button = meta.getButton2();
+                    UHAsyncTask.UHAsyncTaskListener listener = new UHAsyncTask.UHAsyncTaskListener() {
+                        @Override
+                        public void onSuccess(String result) {
+                            // send result back to webview
+                            String escaped = JSONObject.quote(result);
+                            String js = "javascript:afterFormSubmit(" + escaped +");";
+                            finalWebView.loadUrl(js);
+                        }
+                    };
+
+                    UHAsyncTask task = new UHPostAsyncTask(uri.getQuery(), listener);
+                    task.execute(UserHook.UH_HOST_URL + uri.getPath());
+
                 }
+                else if (uri.getHost().equals("reload")) {
 
-                clickedButton(button);
+                    // reload current view with different parameters
+                    Map<String,Object> params = new HashMap<>();
+
+                    if (hookpoint != null) {
+                        params.put("id", hookpoint.getId());
+                    }
+
+                    // find any modified query parameters
+                    for (String key : uri.getQueryParameterNames()) {
+                        String value = uri.getQueryParameter(key);
+
+                        // set meta values by key
+                        if (meta != null) {
+                            meta.setValueByKey(key, value);
+                        }
+                    }
+
+                    loadMessage(params);
+                }
+                else {
+                    UHMessageMetaButton button = null;
+
+                    if (uri.getHost().equals("button1")) {
+                        button = meta.getButton1();
+                    } else if (uri.getHost().equals("button2")) {
+                        button = meta.getButton2();
+                    }
+
+                    clickedButton(button);
+                }
 
                 return true;
             }
@@ -448,4 +506,9 @@ public class UHMessageView extends RelativeLayout {
         return !displaying;
     }
 
+    public interface Factory {
+
+        UHMessageView createMessageView(Context context, UHMessageMeta meta);
+
+    }
 }

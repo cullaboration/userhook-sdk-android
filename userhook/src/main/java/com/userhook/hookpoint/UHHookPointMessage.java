@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 
 import com.userhook.UserHook;
 import com.userhook.model.UHMessageMeta;
+import com.userhook.util.UHInternal;
 import com.userhook.view.UHMessageView;
 
 import org.json.JSONException;
@@ -58,12 +59,12 @@ public class UHHookPointMessage extends UHHookPoint {
 
                     // check for current activity so we have the top most activity in case another activity
                     // has started since the hook points were loaded
-                    Activity currentActivity = UserHook.getActivityLifecycle().getCurrentActivity();
+                    Activity currentActivity = UHInternal.getInstance().getActivityLifecycle().getCurrentActivity();
                     ViewGroup rootView = (ViewGroup) currentActivity.findViewById(android.R.id.content);
                     rootView.addView(messageView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     messageView.showDialog();
 
-                    UserHook.trackHookPointDisplay(hookPoint);
+                    UHInternal.getInstance().trackHookPointDisplay(hookPoint);
                 }
             });
         }

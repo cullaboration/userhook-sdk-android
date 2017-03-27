@@ -161,6 +161,37 @@ public class UHMessageMetaButton {
         return button;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UHMessageMetaButton button = (UHMessageMetaButton) o;
+
+        if (title != null ? !title.equals(button.title) : button.title != null) return false;
+        if (click != null ? !click.equals(button.click) : button.click != null) return false;
+        if (uri != null ? !uri.equals(button.uri) : button.uri != null) return false;
+        if (survey != null ? !survey.equals(button.survey) : button.survey != null) return false;
+        if (survey_title != null ? !survey_title.equals(button.survey_title) : button.survey_title != null)
+            return false;
+        if (payload != null ? !payload.equals(button.payload) : button.payload != null)
+            return false;
+        return image != null ? image.equals(button.image) : button.image == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = title != null ? title.hashCode() : 0;
+        result = 31 * result + (click != null ? click.hashCode() : 0);
+        result = 31 * result + (uri != null ? uri.hashCode() : 0);
+        result = 31 * result + (survey != null ? survey.hashCode() : 0);
+        result = 31 * result + (survey_title != null ? survey_title.hashCode() : 0);
+        result = 31 * result + (payload != null ? payload.hashCode() : 0);
+        result = 31 * result + (image != null ? image.hashCode() : 0);
+        return result;
+    }
+
     public interface OnClickListener {
         void onClick();
     }
